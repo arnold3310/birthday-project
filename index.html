@@ -12,14 +12,10 @@
             font-family: 'Microsoft JhengHei', sans-serif; color: #fff; overflow: hidden; background: transparent;
         }
 
-        /* --- 修正後的背景影片：強制全螢幕 --- */
+        /* 背景影片強制全螢幕 */
         #bg-video {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            object-fit: cover; /* 關鍵：裁切多餘邊緣，保持滿版 */
-            z-index: -1;
-            filter: brightness(0.5); /* 稍微調暗，凸顯前景 */
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            object-fit: cover; z-index: -1; filter: brightness(0.5);
         }
 
         .fireworks-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999; pointer-events: none; }
@@ -37,28 +33,19 @@
         .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 77, 109, 0.5); }
         #typing-text { font-size: 1.2rem; line-height: 1.8; margin-bottom: 20px; text-align: left; min-height: 120px; }
 
-        /* ====================
-           🍰 豪華版蛋糕 CSS
-           ==================== */
+        /* 蛋糕樣式 */
         .cake-stage { position: relative; height: 220px; width: 250px; margin: 0 auto 20px auto; }
         .cake-part { position: absolute; opacity: 0; left: 50%; transform: translateX(-50%); }
-
-        /* 盤子 */
         #plate { bottom: 0; width: 240px; height: 15px; background: var(--plate); border-radius: 50%; box-shadow: 0 5px 10px rgba(0,0,0,0.3); }
-        /* 蛋糕底層 */
         #cake-bottom { bottom: 15px; width: 200px; height: 70px; background: var(--cake-base); border-radius: 10px 10px 5px 5px; box-shadow: inset -10px 0 20px rgba(0,0,0,0.1); }
-        /* 蛋糕中層 */
         #cake-middle { bottom: 80px; width: 200px; height: 10px; background: #7a4b36; border-radius: 2px; }
-        /* 蛋糕頂層 */
         #cake-top { bottom: 85px; width: 200px; height: 60px; background: #ffbcd9; border-radius: 15px 15px 5px 5px; box-shadow: inset -5px -5px 10px rgba(0,0,0,0.05); z-index: 2; }
         #cake-top::before { content: ''; position: absolute; top: 50px; left: 15px; width: 20px; height: 25px; background: #ffbcd9; border-radius: 0 0 20px 20px; box-shadow: 40px 0 0 #ffbcd9, 80px 5px 0 #ffbcd9, 120px 0 0 #ffbcd9, 150px 8px 0 #ffbcd9; }
-        /* 櫻桃 */
         .cherry { width: 20px; height: 20px; background: #d90429; border-radius: 50%; position: absolute; top: -10px; z-index: 3; box-shadow: inset -2px -2px 5px rgba(0,0,0,0.3); }
-        /* 蠟燭 */
         #candle { bottom: 140px; width: 12px; height: 40px; background: repeating-linear-gradient(45deg, #fff, #fff 4px, #74c0fc 4px, #74c0fc 8px); z-index: 1; border-radius: 2px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
         #flame { width: 14px; height: 24px; background: #ffcc00; border-radius: 50% 50% 20% 20%; position: absolute; top: -25px; left: 50%; transform: translateX(-50%); box-shadow: 0 0 15px #ff6600, 0 0 30px #ffcc00; animation: flicker 0.4s infinite alternate; display: none; }
 
-        /* 動畫區 */
+        /* 動畫 */
         @keyframes bounceInUp { 0% { opacity: 0; transform: translate(-50%, 100px); } 60% { opacity: 1; transform: translate(-50%, -10px); } 100% { opacity: 1; transform: translate(-50%, 0); } }
         @keyframes dropDown { 0% { opacity: 0; transform: translate(-50%, -100px); } 60% { opacity: 1; transform: translate(-50%, 10px); } 100% { opacity: 1; transform: translate(-50%, 0); } }
         @keyframes flicker { from { opacity: 0.85; transform: translateX(-50%) scale(0.9); } to { opacity: 1; transform: translateX(-50%) scale(1.1); } }
@@ -79,7 +66,11 @@
         <source src="bgvideo.mp4" type="video/mp4">
     </video>
     
-    <audio id="bgMusic" loop>
+    <audio id="introMusic" loop>
+        <source src="bg2song.mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="cakeMusic" loop>
         <source src="bgsong.mp3" type="audio/mpeg">
     </audio>
 
@@ -116,15 +107,15 @@
     </div>
 
     <script>
-        const correctPw = '0121'; // 密碼設定
+        const correctPw = '0121';
         const heartWords = "雖然我們還沒真正見過面，\n但這段時間和妳聊天真的很開心。\n在這個特別的日子，\n想用我正在學的程式，給妳一點不一樣的祝福...";
         
         const fireworks = new Fireworks.default(document.querySelector('.fireworks-container'), { intensity: 30, particles: 150 });
 
         function checkPassword() {
             if (document.getElementById('pw-input').value === correctPw) {
-                // 嘗試播放音樂
-                document.getElementById('bgMusic').play().catch(() => { console.log("音樂自動播放需互動"); });
+                // 1. 解鎖後播放「前奏音樂」
+                document.getElementById('introMusic').play().catch(() => { console.log("音樂播放需互動"); });
                 
                 document.getElementById('step1').classList.add('hidden');
                 document.getElementById('step2').classList.remove('hidden');
@@ -148,10 +139,19 @@
         }
 
         function finalSurprise() {
+            // 1. 停止「前奏音樂」
+            const intro = document.getElementById('introMusic');
+            intro.pause();
+            intro.currentTime = 0; // 重置
+
+            // 2. 播放「蛋糕音樂」
+            document.getElementById('cakeMusic').play();
+
+            // 3. 顯示蛋糕與煙火
             document.getElementById('final-title').innerText = "🎂 生日快樂！🎂";
             document.getElementById('final-btn').style.display = 'none';
             document.getElementById('cake-stage').classList.add('animate');
-            // 2秒後點火並放煙火
+            
             setTimeout(() => {
                 document.getElementById('flame').style.display = 'block';
                 fireworks.start();
