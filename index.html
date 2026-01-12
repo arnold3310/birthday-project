@@ -3,86 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Happy Birthday to You!</title>
+    <title>A Special Surprise</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        body {
-            margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh;
-            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
-            font-family: 'Microsoft JhengHei', sans-serif; color: #fff; transition: 1s;
-        }
-        .container {
-            text-align: center; background: rgba(255, 255, 255, 0.2);
-            padding: 40px; border-radius: 20px; backdrop-filter: blur(10px);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1); width: 85%; max-width: 500px;
-        }
-        h1 { font-size: 2.5rem; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
-        .btn-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-top: 20px; }
-        .btn {
-            padding: 12px 24px; font-size: 1rem; background: #ff4d6d; color: white;
-            border: none; border-radius: 50px; cursor: pointer; transition: 0.3s;
-        }
-        .btn:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(255, 77, 109, 0.4); }
-        #display-area { margin-top: 30px; min-height: 60px; font-size: 1.2rem; line-height: 1.6; font-weight: bold; }
+        :root { --main-bg: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); --accent: #ff4d6d; }
+        body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: var(--main-bg); font-family: 'Microsoft JhengHei', sans-serif; color: #fff; overflow-x: hidden; }
+        .card { text-align: center; background: rgba(255, 255, 255, 0.23); padding: 40px; border-radius: 20px; backdrop-filter: blur(15px); box-shadow: 0 8px 32px rgba(0,0,0,0.15); width: 85%; max-width: 450px; }
+        .hidden { display: none; }
+        
+        /* 密碼輸入框樣式 */
+        input { padding: 10px; border-radius: 10px; border: none; width: 60%; margin-bottom: 15px; text-align: center; font-size: 1.2rem; outline: none; }
+        .btn { padding: 12px 25px; border-radius: 50px; border: none; background: var(--accent); color: white; cursor: pointer; font-size: 1rem; transition: 0.3s; margin: 5px; }
+        .btn:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(255, 77, 109, 0.3); }
+
+        /* 文案區樣式 */
+        #typing-text { font-size: 1.3rem; line-height: 1.8; margin-bottom: 20px; min-height: 100px; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1 id="title">Happy Birthday! 🎂</h1>
-        <p>這是一個專屬於妳的數位小盒子</p>
-        
-        <div id="display-area">點擊下方按鈕看看吧！</div>
+    <div id="step1" class="card">
+        <h2>🔒 身分驗證</h2>
+        <p>請輸入這份驚喜的專屬密碼</p>
+        <input type="password" id="pw-input" placeholder="密碼 4 碼">
+        <br>
+        <button class="btn" onclick="checkPassword()">解鎖驚喜</button>
+    </div>
 
+    <div id="step2" class="card hidden">
+        <h2>我想對妳說...</h2>
+        <div id="typing-text"></div>
+        <button id="next-btn" class="btn hidden" onclick="showInteractions()">然後呢？</button>
+    </div>
+
+    <div id="step3" class="card hidden">
+        <h1 id="final-title">Happy Birthday!</h1>
+        <div id="display-area" style="min-height: 60px; font-weight: bold; margin: 15px 0;">祝妳新的一歲天天開心！</div>
         <div class="btn-group">
-            <button class="btn" onclick="showWish()">生日驚喜</button>
-            <button class="btn" onclick="getCoupon()">抽取禮物券</button>
+            <button class="btn" onclick="getCoupon()">抽禮物券</button>
             <button class="btn" onclick="changeMood()">變換心情</button>
+            <button class="btn" onclick="finalSurprise()">點燃驚喜</button>
         </div>
     </div>
 
     <script>
-        // 驚喜文案庫
-        const wishes = [
-            "雖然我們還沒見過面，但能在網路上遇到妳，真的很開心！✨",
-            "祝妳這一年所有想做的事都能順利，每天都有好心情！🌻",
-            "妳是一個很特別的女生，希望這份小驚喜能讓妳笑一下。😊",
-            "期待未來的某一天，我們可以一起切真正的蛋糕！🍰"
-        ];
+        const correctPw = '0121'; // 你設定的密碼
+        const heartWords = "雖然我們還沒真正見過面，\n但這段時間和妳聊天真的很開心。\n在這個特別的日子，\n想用我正在學的程式，給妳一點不一樣的祝福...";
 
-        // 禮物券庫
-        const coupons = [
-            "【見面大餐券】下次見面我請客！🍔",
-            "【壞心情傾聽券】隨叫隨到，我會陪妳聊天。📞",
-            "【奶茶兌換券】想喝飲料隨時找我領取。🧋",
-            "【許願券】妳可以向我提出一個要求！🎁"
-        ];
-
-        function celebrate() {
-            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        function checkPassword() {
+            const input = document.getElementById('pw-input').value;
+            if (input === correctPw) {
+                document.getElementById('step1').classList.add('hidden');
+                document.getElementById('step2').classList.remove('hidden');
+                startTyping();
+            } else {
+                alert("密碼不對喔，再試試看！");
+            }
         }
 
-        function showWish() {
-            celebrate();
-            const randomWish = wishes[Math.floor(Math.random() * wishes.length)];
-            document.getElementById('display-area').innerText = randomWish;
-            document.getElementById('title').innerText = "生日快樂！🎉";
+        function startTyping() {
+            const area = document.getElementById('typing-text');
+            let i = 0;
+            function type() {
+                if (i < heartWords.length) {
+                    area.innerHTML += heartWords.charAt(i) === '\n' ? '<br>' : heartWords.charAt(i);
+                    i++;
+                    setTimeout(type, 100);
+                } else {
+                    document.getElementById('next-btn').classList.remove('hidden');
+                }
+            }
+            type();
+        }
+
+        function showInteractions() {
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.remove('hidden');
         }
 
         function getCoupon() {
-            const randomCoupon = coupons[Math.floor(Math.random() * coupons.length)];
-            document.getElementById('display-area').innerHTML = `<span style="color:#ffed4a">恭喜抽中：</span><br>${randomCoupon}`;
+            const coupons = ["【見面大餐券】下次見面我請客！🍔", "【壞心情傾聽券】隨叫隨到！📞", "【珍奶兌換券】想喝飲料隨時領取。🧋"];
+            const pick = coupons[Math.floor(Math.random() * coupons.length)];
+            document.getElementById('display-area').innerText = pick;
         }
 
         function changeMood() {
-            const colors = [
-                'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)', // 紫粉
-                'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)', // 藍綠
-                'linear-gradient(135deg, #fccb90 0%, #d57eeb 100%)', // 橘紫
-                'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)'  // 原色
-            ];
-            const randomColor = colors[Math.floor(Math.random() * colors.length)];
-            document.body.style.background = randomColor;
+            const colors = ['#a18cd1', '#84fab0', '#fccb90', '#ff9a9e'];
+            document.body.style.background = colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function finalSurprise() {
+            document.getElementById('final-title').innerText = "🎂 生日快樂！🎂";
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
         }
     </script>
 </body>
