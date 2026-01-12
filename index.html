@@ -3,32 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Happy Birthday!</title>
+    <title>Happy 21st Birthday!</title>
     <script src="https://cdn.jsdelivr.net/npm/fireworks-js@2.10.7/dist/index.umd.js"></script>
     <style>
         :root { --accent: #ff4d6d; --cream: #fff5e1; --cake-base: #f5c096; --plate: #f0f0f0; }
         body {
             margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh;
-            font-family: 'Microsoft JhengHei', sans-serif; color: #fff; overflow: hidden;
-            background: #000; /* 預設黑色背景，讓開場更有神秘感 */
+            font-family: 'Microsoft JhengHei', sans-serif; color: #fff; overflow: hidden; background: #000;
         }
 
-        /* --- 背景影片設定 --- */
+        /* 背景影片設定 */
         #bg-video {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             object-fit: cover; z-index: -1;
-            filter: brightness(0.5); 
-            opacity: 0; /* 初始狀態：隱藏 */
-            transition: opacity 2.5s ease-in; /* 慢慢浮現的轉場效果 (2.5秒) */
+            filter: brightness(0.5); opacity: 0; transition: opacity 2.5s ease-in;
         }
 
         .fireworks-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999; pointer-events: none; }
         
+        /* 卡片主體 */
         .card {
             text-align: center; background: rgba(20, 30, 50, 0.75); padding: 40px; border-radius: 20px;
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             box-shadow: 0 8px 32px rgba(0,0,0,0.5); width: 85%; max-width: 450px; position: relative;
-            border: 1px solid rgba(255, 255, 255, 0.2); z-index: 10; transition: background 1s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2); z-index: 10; 
+            transition: all 0.8s ease; /* 增加過渡效果，讓背景消失更滑順 */
         }
         
         .hidden { display: none; }
@@ -49,26 +48,30 @@
         #candle { bottom: 140px; width: 12px; height: 40px; background: repeating-linear-gradient(45deg, #fff, #fff 4px, #74c0fc 4px, #74c0fc 8px); z-index: 1; border-radius: 2px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
         #flame { width: 14px; height: 24px; background: #ffcc00; border-radius: 50% 50% 20% 20%; position: absolute; top: -25px; left: 50%; transform: translateX(-50%); box-shadow: 0 0 15px #ff6600, 0 0 30px #ffcc00; animation: flicker 0.4s infinite alternate; display: none; }
 
+        /* 新增：21歲祝福語樣式 */
+        #post-cake-wishes { font-size: 1.3rem; font-weight: bold; line-height: 1.8; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); margin-top: 30px; opacity: 0; /* 初始隱藏 */ }
+        .highlight-21 { font-size: 2.5rem; color: #ff4d6d; vertical-align: middle; margin: 0 5px; }
+
+        /* 動畫定義 */
         @keyframes bounceInUp { 0% { opacity: 0; transform: translate(-50%, 100px); } 60% { opacity: 1; transform: translate(-50%, -10px); } 100% { opacity: 1; transform: translate(-50%, 0); } }
         @keyframes dropDown { 0% { opacity: 0; transform: translate(-50%, -100px); } 60% { opacity: 1; transform: translate(-50%, 10px); } 100% { opacity: 1; transform: translate(-50%, 0); } }
         @keyframes flicker { from { opacity: 0.85; transform: translateX(-50%) scale(0.9); } to { opacity: 1; transform: translateX(-50%) scale(1.1); } }
+        @keyframes fadeInText { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* 動畫類別 */
         .animate #plate { animation: bounceInUp 0.8s ease-out forwards; }
         .animate #cake-bottom { animation: bounceInUp 0.8s ease-out 0.3s forwards; }
         .animate #cake-middle { animation: bounceInUp 0.8s ease-out 0.5s forwards; }
         .animate #cake-top { animation: dropDown 0.8s ease-out 0.8s forwards; }
         .animate .cherry { animation: dropDown 0.6s ease-out 1.2s forwards; }
         .animate #candle { animation: dropDown 0.6s ease-out 1.4s forwards; }
+        .fade-in { animation: fadeInText 1.5s ease-out forwards; } /* 文字淡入動畫 */
     </style>
 </head>
 <body>
 
     <div class="fireworks-container"></div>
-    
-    <video muted loop playsinline id="bg-video">
-        <source src="bgvideo.mp4" type="video/mp4">
-    </video>
-    
+    <video muted loop playsinline id="bg-video"><source src="bgvideo.mp4" type="video/mp4"></video>
     <audio id="introMusic" loop><source src="bg2song.mp3" type="audio/mpeg"></audio>
     <audio id="cakeMusic" loop><source src="bgsong.mp3" type="audio/mpeg"></audio>
 
@@ -86,7 +89,11 @@
     </div>
 
     <div id="step3" class="card hidden">
-        <h1 id="final-title">Happy Birthday!</h1>
+        <div id="pre-cake-elements">
+            <h1 style="margin-bottom: 30px;">準備好了嗎？</h1>
+            <button class="btn" id="final-btn" onclick="finalSurprise()">點燃驚喜</button>
+        </div>
+
         <div class="cake-stage" id="cake-stage">
             <div id="plate" class="cake-part"></div>
             <div id="cake-bottom" class="cake-part"></div>
@@ -98,28 +105,25 @@
             </div>
             <div id="candle" class="cake-part"><div id="flame"></div></div>
         </div>
-        <div id="display-area" style="margin: 10px 0; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">祝妳新的一歲天天開心！✨</div>
-        <button class="btn" id="final-btn" onclick="finalSurprise()">點燃驚喜</button>
+
+        <div id="post-cake-wishes">
+            Happy <span class="highlight-21">21</span> Birthday!<br>
+            這是最美好的年紀，願妳閃閃發光✨<br>
+            未來的一切都如妳所願！
+        </div>
     </div>
 
     <script>
         const correctPw = '0121';
+        // 這裡可以修改第二頁的真心話
         const heartWords = "雖然我們還沒真正見過面，\n但這段時間和妳聊天真的很開心。\n在這個特別的日子，\n想用我正在學的程式，給妳一點不一樣的祝福...";
         
         const fireworks = new Fireworks.default(document.querySelector('.fireworks-container'), { intensity: 30, particles: 150 });
 
         function checkPassword() {
             if (document.getElementById('pw-input').value === correctPw) {
-                // --- 關鍵修改：解鎖後才啟動 ---
-                
-                // 1. 慢慢浮現背景影片
-                const video = document.getElementById('bg-video');
-                video.play(); // 開始播放
-                video.style.opacity = 1; // 淡入效果
-                
-                // 2. 播放前奏音樂
+                const video = document.getElementById('bg-video'); video.play(); video.style.opacity = 1;
                 document.getElementById('introMusic').play().catch(() => {});
-                
                 document.getElementById('step1').classList.add('hidden');
                 document.getElementById('step2').classList.remove('hidden');
                 startTyping();
@@ -128,34 +132,36 @@
 
         function startTyping(){
             const area=document.getElementById('typing-text'); let i=0;
-            function type(){
-                if(i<heartWords.length){
-                    area.innerHTML+=heartWords.charAt(i)==='\n'?'<br>':heartWords.charAt(i);
-                    i++; setTimeout(type, 100);
-                }else{ document.getElementById('next-btn').classList.remove('hidden'); }
-            } type();
+            function type(){ if(i<heartWords.length){ area.innerHTML+=heartWords.charAt(i)==='\n'?'<br>':heartWords.charAt(i); i++; setTimeout(type, 100); }else{ document.getElementById('next-btn').classList.remove('hidden'); } } type();
         }
 
-        function showInteractions(){
-            document.getElementById('step2').classList.add('hidden');
-            document.getElementById('step3').classList.remove('hidden');
-        }
+        function showInteractions(){ document.getElementById('step2').classList.add('hidden'); document.getElementById('step3').classList.remove('hidden'); }
 
         function finalSurprise() {
-            // 切換音樂
-            const intro = document.getElementById('introMusic');
-            intro.pause(); intro.currentTime = 0;
+            // 1. 切換音樂
+            const intro = document.getElementById('introMusic'); intro.pause(); intro.currentTime = 0;
             document.getElementById('cakeMusic').play();
 
-            // 顯示蛋糕
-            document.getElementById('final-title').innerText = "🎂 生日快樂！🎂";
-            document.getElementById('final-btn').style.display = 'none';
+            // 2. --- 關鍵修改：立刻隱藏舊文字與按鈕 ---
+            document.getElementById('pre-cake-elements').style.display = 'none';
+
+            // 3. --- 關鍵修改：移除深色卡片背景 ---
+            // 讓背景變透明，並移除邊框和陰影，讓蛋糕懸浮在夜景中
+            const card = document.querySelector('#step3.card');
+            card.style.background = 'transparent';
+            card.style.boxShadow = 'none';
+            card.style.border = 'none';
+            card.style.backdropFilter = 'none'; // 移除毛玻璃效果
+
+            // 4. 啟動蛋糕動畫
             document.getElementById('cake-stage').classList.add('animate');
             
+            // 5. 延遲後點火、放煙火、顯示 21 歲祝福
             setTimeout(() => {
                 document.getElementById('flame').style.display = 'block';
                 fireworks.start();
-                document.querySelector('#step3.card').style.background = 'rgba(20, 30, 50, 0.4)';
+                // 顯示新的祝福語並加上淡入動畫
+                document.getElementById('post-cake-wishes').classList.add('fade-in');
             }, 2000);
         }
     </script>
