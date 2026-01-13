@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Happy 21st Birthday</title>
-    <script src="https://cdn.jsdelivr.net/npm/fireworks-js@2.10.7/dist/index.umd.js"></script>
+    <script src="[https://cdn.jsdelivr.net/npm/fireworks-js@2.10.7/dist/index.umd.js](https://cdn.jsdelivr.net/npm/fireworks-js@2.10.7/dist/index.umd.js)"></script>
     <style>
         /* =========================================
-           GLOBAL STYLES (全域設定 - 不用動)
+           GLOBAL STYLES (全域設定)
            ========================================= */
         body {
             margin: 0; padding: 0; background-color: #000; color: #fff;
@@ -15,34 +15,22 @@
             display: flex; justify-content: center; align-items: center; min-height: 100vh;
             overflow: hidden;
         }
-        /* 隱藏所有場景，只有加上 active 才會顯示 */
         .scene-container { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; justify-content: center; align-items: center; flex-direction: column; }
         .scene-container.active { display: flex; }
         
-        /* 背景煙火與影片 */
         #fireworks-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
         #bg-video { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; filter: brightness(0.4); opacity: 0; transition: opacity 2s ease-in; }
         
-        ```css
-        /* =========================================
-           新增：駭客動態背景樣式
-           ========================================= */
+        /* 駭客動態背景樣式 */
         #hacker-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0; /* 放在最底層背景影片的上面，但比場景內容低 */
-            pointer-events: none; /* 讓滑鼠可以穿透它點到按鈕 */
-            background: #000; /* 純黑底色 */
-            transition: opacity 1.5s ease-out; /* 切換場景時的淡出效果 */
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; pointer-events: none; background: #000;
+            transition: opacity 1.5s ease-out;
         }
 
         /* =========================================
            SCENE 1 STYLE: 終端機登入
            ========================================= */
-
         .s1_terminal {
             border: 1px solid #0f0; padding: 40px; width: 85%; max-width: 400px;
             background: rgba(0, 20, 0, 0.9); 
@@ -60,8 +48,9 @@
         .s1_loading_bar_bg { width: 100%; height: 10px; background: rgba(0, 255, 0, 0.1); border: 1px solid #0f0; margin-top: 10px; position: relative; }
         .s1_loading_bar_fill { width: 0%; height: 100%; background: #0f0; box-shadow: 0 0 10px #0f0; transition: width 0.1s linear; }
         .s1_status { color: #0f0; font-size: 0.8rem; margin-top: 5px; }
+
         /* =========================================
-           SCENE 2 STYLE: 走位測試 (惡搞按鈕)
+           SCENE 2 STYLE: 走位測試
            ========================================= */
         .s2_card { background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; backdrop-filter: blur(10px); text-align: center; border: 1px solid rgba(255,255,255,0.2); z-index: 10; width: 300px; }
         .s2_btn_ok { padding: 10px 30px; background: #ff4d6d; color: white; border: none; border-radius: 50px; cursor: pointer; font-size: 1rem; }
@@ -94,7 +83,6 @@
            ========================================= */
         .s5_container { text-align: center; z-index: 10; }
         .s5_cake_box { position: relative; width: 200px; height: 200px; margin: 0 auto; }
-        /* 簡易精緻蛋糕 CSS */
         .s5_cake_base { position: absolute; bottom: 20px; left: 25px; width: 150px; height: 60px; background: #f5c096; border-radius: 10px; }
         .s5_cake_top { position: absolute; bottom: 80px; left: 25px; width: 150px; height: 50px; background: #ffbcd9; border-radius: 15px 15px 5px 5px; }
         .s5_candle { position: absolute; bottom: 130px; left: 95px; width: 10px; height: 40px; background: #fff; z-index: 2; }
@@ -105,6 +93,9 @@
         }
         .s5_btn { margin-top: 30px; padding: 12px 30px; background: #ff4d6d; color: white; border: none; border-radius: 50px; cursor: pointer; font-size: 1.2rem; font-weight: bold; }
         @keyframes flicker { from { opacity: 0.8; transform: scale(1); } to { opacity: 1; transform: scale(1.1); } }
+        /* 按鈕淡入動畫 */
+        .fade-in-btn { animation: btnFadeIn 2s forwards; }
+        @keyframes btnFadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         /* =========================================
            SCENE 6 STYLE: 信封與結尾
@@ -120,7 +111,6 @@
             padding: 20px; box-sizing: border-box; font-size: 1rem; line-height: 1.6; border-radius: 5px;
             transform: translateY(0); transition: 1s; opacity: 0; text-align: left;
         }
-        /* 開信動畫 */
         .s6_open .s6_flap { transform: rotateX(180deg); }
         .s6_open .s6_letter { transform: translateY(-150px); opacity: 1; z-index: 50; }
     </style>
@@ -142,7 +132,7 @@
             
             <div id="s1-input-area">
                 <input type="password" id="s1-input" class="s1_input" placeholder="****">
-                <button class="s1_btn" onclick="s1_login()">[訪問系統]</button>
+                <button class="s1_btn" onclick="s1_login()">[ 進入系統 ]</button>
             </div>
 
             <div id="s1-loading" class="s1_loading_container">
@@ -199,16 +189,15 @@
             </div>
             
             <button id="s5-btn-light" class="s5_btn" onclick="s5_lightUp()">點燃聖火</button>
-            
             <button id="s5-btn-next" class="s5_btn" style="display: none; background: #888;" onclick="s5_finish()">🎁 領取掉落物</button>
-            </div>
+        </div>
     </div>
 
     <div id="scene-6" class="scene-container">
         <div id="s6-envelope" class="s6_envelope" onclick="s6_open()">
             <div class="s6_flap"></div>
             <div class="s6_letter" id="s6-content">
-                </div>
+            </div>
         </div>
         <h2 style="margin-top: 250px;">👇 點擊開啟掉落物</h2>
     </div>
@@ -216,19 +205,15 @@
     <script>
         // =========================================
         // CONFIG: 請在這裡修改你的內容
-        / =========================================
+        // =========================================
         const CONFIG = {
-            targetName: "夥伴",  // 她的名字
+            targetName: "夥伴",
             password: "0121",
-            
-            // 第四幕：照片清單 (請上傳對應照片)
             photos: [
                 { src: "photo1.jpg", text: "這是我們第一次組隊..." },
                 { src: "photo2.jpg", text: "那時候妳還在雷..." },
                 { src: "photo3.jpg", text: "終於贏了一場！" }
             ],
-            
-            // 第六幕：最後的信
             finalLetter: `
                 <h3>Happy Birthday!</h3>
                 <p>這是一封藏在程式碼後的信。<br>
@@ -238,10 +223,8 @@
             `
         };
 
-        // 初始化煙火
         const fireworks = new Fireworks.default(document.querySelector('#fireworks-canvas'));
 
-        ㄩ
         // =========================================
         // 新增功能：駭客任務數字雨背景特效
         // =========================================
@@ -249,49 +232,38 @@
             const canvas = document.getElementById('hacker-bg');
             const ctx = canvas.getContext('2d');
 
-            // 設定畫布大小為全螢幕
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
-            // 定義要下墜的字元 (可以自己改，這裡用數字和英文)
             const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
             const charArray = chars.split('');
             const fontSize = 16;
-            const columns = canvas.width / fontSize; // 計算螢幕可以放幾行
+            const columns = canvas.width / fontSize;
 
-            // 每一行的下墜位置 (Y座標)
             const drops = [];
             for (let i = 0; i < columns; i++) {
                 drops[i] = 1;
             }
 
-            // 繪製動畫的函數
             function drawMatrix() {
-                // 每一幀都用半透明黑色覆蓋，製造「拖尾」效果
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // 設定文字顏色為螢光綠
                 ctx.fillStyle = '#0F0'; 
                 ctx.font = fontSize + 'px monospace';
 
-                // 迴圈繪製每一行的字元
                 for (let i = 0; i < drops.length; i++) {
                     const text = charArray[Math.floor(Math.random() * charArray.length)];
                     ctx.fillText(text, i * fontSize, drops[i] * fontSize);
 
-                    // 如果掉出螢幕底部，隨機重置到頂部
                     if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
                         drops[i] = 0;
                     }
-                    // Y座標往下移
                     drops[i]++;
                 }
             }
-            // 每 33 毫秒重繪一次 (約 30fps)
             setInterval(drawMatrix, 33);
 
-            // 視窗大小改變時重新設定畫布
             window.addEventListener('resize', () => {
                 canvas.width = window.innerWidth;
                 canvas.height = window.innerHeight;
@@ -303,7 +275,6 @@
             document.querySelectorAll('.scene-container').forEach(el => el.classList.remove('active'));
             document.getElementById(`scene-${n}`).classList.add('active');
             
-            // 音樂自動切換邏輯
             if(n === 4) switchMusic('bgm-memory');
             if(n === 5) switchMusic('bgm-party');
         }
@@ -318,7 +289,6 @@
         // =========================================
 
         window.onload = function() {
-            // 這裡修改開場的系統文字
             const msg = `> 系統偵測啟動...\n> 玩家 ID: [${CONFIG.targetName}]\n> 發現生日數據流，正在解析...\n> 請求存取權限..._`;
             const el = document.getElementById('s1-msg');
             let i = 0;
@@ -331,35 +301,33 @@
             type();
         };
 
-        // 2. 登入檢查 (中文錯誤訊息)
         function s1_login() {
             const inputVal = document.getElementById('s1-input').value;
             if(inputVal === CONFIG.password) {
                 document.getElementById('sfx-login').play().catch(()=>{});
                 document.getElementById('s1-input-area').style.display = 'none';
                 document.getElementById('s1-loading').style.display = 'block';
+                // 執行進度條函式
                 s1_startLoading();
             } else {
-                // 這裡修改錯誤訊息
                 alert("拒絕存取：密碼錯誤 (提示：生日)");
                 document.getElementById('s1-input').value = "";
             }
         }
 
-        // 3. 進度條跑動 (中文系統紀錄)
+        // 補回遺失的進度條函式
         function s1_startLoading() {
             let percent = 0;
             const bar = document.getElementById('s1-bar-fill');
             const percentText = document.getElementById('s1-percent');
             const logText = document.getElementById('s1-log');
             
-            // 這裡修改跑條時跳出的系統訊息
             const logs = [
                 "正在初始化核心模組...",
                 "同步生日回憶數據...",
                 "載入遊戲資源包...",
                 "正在繞過安全防火牆...",
-                "連線至 [楊雅羽] 專屬伺服器...",
+                "連線至專屬伺服器...",
                 "環境建置完成..."
             ];
 
@@ -371,26 +339,26 @@
                     
                     document.getElementById('s1-loading-msg').innerText = "準備進入遊戲...";
                     
-                    // 👇👇👇 修改這裡 👇👇👇
                     setTimeout(() => {
-                        // 1. 讓駭客背景淡出
-                        document.getElementById('hacker-bg').style.opacity = 0;
-                        
-                        // 2. 播放海邊影片並淡入
+                        document.getElementById('hacker-bg').style.opacity = 0; // 淡出駭客背景
                         const vid = document.getElementById('bg-video'); 
                         vid.play(); 
                         vid.style.opacity = 1;
-                        
                         switchMusic('bgm-login');
                         gotoScene(2);
                     }, 1000);
-                    // 👆👆👆 修改結束 👆👆👆
+                }
+                
+                bar.style.width = percent + "%";
+                percentText.innerText = percent;
+                
+                if (percent % 15 === 0) {
+                    logText.innerText = "> " + logs[Math.floor(Math.random() * logs.length)];
                 }
             }, 50);
         }
-        // =========================================
-        // SCENE 2 LOGIC: 走位按鈕
-        // =========================================
+
+        // SCENE 2
         function s2_runAway() {
             const btn = document.getElementById('s2-run-btn');
             const x = Math.random() * 200 - 100;
@@ -399,71 +367,52 @@
             btn.innerText = "抓不到~";
         }
 
-        // =========================================
-        // SCENE 3 LOGIC: 誠實測試
-        // =========================================
+        // SCENE 3
         function s3_check(isGood) {
             if(isGood) {
                 alert("驗證通過！進入回憶資料庫...");
-                s4_load(0); // 預先載入第一張照片
+                s4_load(0);
                 gotoScene(4);
             } else {
                 alert("⚠️ 系統錯誤！請摸著良心重選！");
             }
         }
 
-        // =========================================
-        // SCENE 4 LOGIC: 照片流
-        // =========================================
+        // SCENE 4
         let photoIndex = 0;
         function s4_load(i) {
             if(i >= CONFIG.photos.length) { gotoScene(5); return; }
-            const p = CONFIG.photos[i];
-            document.getElementById('s4-img').src = p.src;
-            document.getElementById('s4-caption').innerText = p.text;
+            document.getElementById('s4-img').src = CONFIG.photos[i].src;
+            document.getElementById('s4-caption').innerText = CONFIG.photos[i].text;
             document.getElementById('s4-counter').innerText = `Memory ${i+1}/${CONFIG.photos.length}`;
             photoIndex = i;
         }
         function s4_next() { s4_load(photoIndex + 1); }
-// =========================================
-        // SCENE 5 LOGIC: 蛋糕 (已修改：20秒延遲)
-        // =========================================
+
+        // SCENE 5
         function s5_lightUp() {
-            // 1. 點火與煙火
             document.getElementById('s5-flame').style.display = "block";
             fireworks.start();
-            
-            // 2. 隱藏原本的點火按鈕
             document.getElementById('s5-btn-light').style.display = 'none';
 
-            // 3. 設定 20 秒倒數，之後顯示領獎按鈕
-            // 💡 測試時如果不想要等20秒，可以把下面的 20000 改成 3000 (3秒)
+            // 20秒後出現領獎按鈕 (測試可改小)
             setTimeout(() => {
                 const nextBtn = document.getElementById('s5-btn-next');
-                nextBtn.style.display = 'inline-block'; // 顯示按鈕
-            }, 20000); // 20000 毫秒 = 20 秒
+                nextBtn.style.display = 'inline-block';
+                nextBtn.classList.add('fade-in-btn');
+            }, 20000);
         }
 
-        // 新增：點擊領獎按鈕後才去下一幕
         function s5_finish() {
             gotoScene(6);
-            // 讓信封飛入的動畫
-            setTimeout(() => { 
-                document.getElementById('s6-envelope').style.transform = "scale(1)"; 
-            }, 500);
+            setTimeout(() => { document.getElementById('s6-envelope').style.transform = "scale(1)"; }, 500);
         }
-        // =========================================
-        // SCENE 6 LOGIC: 信封
-        // =========================================
+
+        // SCENE 6
         document.getElementById('s6-content').innerHTML = CONFIG.finalLetter;
         function s6_open() {
             document.getElementById('s6-envelope').classList.add('s6_open');
         }
-
     </script>
 </body>
 </html>
-
-
-
-
