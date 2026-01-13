@@ -21,15 +21,13 @@
         
         /* 背景煙火與影片 */
         #fireworks-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }.fireworks-top { z-index: 999 !important; }
-        <div id="scene-transition-overlay">
-        <div class="portal-loader"></div>
-        <div class="transition-text">> 正在導向回憶數據庫...</div>
-    </div>
+
         #bg-video { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; filter: brightness(0.4); opacity: 0; transition: opacity 2s ease-in; }
 
         /* =========================================
            新增：轉場特效樣式 (Portal Transition)
            ========================================= */
+     
         #scene-transition-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: #000; z-index: 10000;
@@ -196,6 +194,11 @@
     </style>
 </head>
 <body>
+
+    <div id="scene-transition-overlay">
+    <div class="portal-loader"></div>
+    <div class="transition-text">> 正在導向回憶數據庫...</div>
+    </div>
 
     <div id="fireworks-canvas"></div>
     <video muted loop playsinline id="bg-video"><source src="bgvideo.mp4" type="video/mp4"></video>
@@ -613,6 +616,7 @@
     </script>
 </body>
 </html>
+
 
 
 
