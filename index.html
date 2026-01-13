@@ -3,244 +3,312 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Player 21: Level Up (Prototype)</title>
+    <title>Happy 21st Birthday</title>
     <script src="https://cdn.jsdelivr.net/npm/fireworks-js@2.10.7/dist/index.umd.js"></script>
     <style>
-        /* ==================== 基礎樣式 (骨架) ==================== */
+        /* =========================================
+           GLOBAL STYLES (全域設定 - 不用動)
+           ========================================= */
         body {
-            margin: 0; padding: 0; 
-            background-color: #000; color: #fff; font-family: sans-serif;
+            margin: 0; padding: 0; background-color: #000; color: #fff;
+            font-family: 'Microsoft JhengHei', sans-serif;
             display: flex; justify-content: center; align-items: center; min-height: 100vh;
-            overflow: hidden; text-align: center;
+            overflow: hidden;
         }
-
-        /* 場景通用設定：預設隱藏，絕對定位疊在一起 */
-        .scene {
-            display: none; /* 預設隱藏 */
-            width: 80%; max-width: 500px;
-            padding: 20px; border: 1px solid #555; border-radius: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            z-index: 10;
-        }
-
-        /* 顯示場景用的 class */
-        .scene.active { display: block; }
-
-        /* 按鈕基礎樣式 */
-        button {
-            padding: 10px 20px; margin: 10px; cursor: pointer;
-            font-size: 1rem; background: #ff4d6d; color: white; border: none; border-radius: 5px;
-        }
+        /* 隱藏所有場景，只有加上 active 才會顯示 */
+        .scene-container { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; justify-content: center; align-items: center; flex-direction: column; }
+        .scene-container.active { display: flex; }
         
-        /* 照片區樣式 */
-        #photo-display {
-            width: 100%; height: 300px; background: #222; margin: 10px 0;
-            display: flex; align-items: center; justify-content: center;
-            overflow: hidden; border: 1px solid #444;
-        }
-        #photo-img { max-width: 100%; max-height: 100%; display: block; }
-        #photo-caption { min-height: 50px; padding: 10px; font-size: 1.1rem; }
-
-        /* 蛋糕簡單示意 (先用方塊代替，確認功能) */
-        .simple-cake { width: 100px; height: 100px; background: pink; margin: 20px auto; display: flex; align-items: center; justify-content: center; color: #333; }
-
-        /* 煙火層 */
+        /* 背景煙火與影片 */
         #fireworks-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
-        
-        /* 信封區 */
-        #letter-box { display: none; margin-top: 20px; border: 2px dashed #fff; padding: 20px; cursor: pointer; }
-        #final-message { display: none; text-align: left; line-height: 1.6; margin-top: 20px; border-top: 1px solid #555; padding-top: 10px; }
+        #bg-video { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; filter: brightness(0.4); opacity: 0; transition: opacity 2s ease-in; }
+
+        /* =========================================
+           SCENE 1 STYLE: 終端機登入
+           ========================================= */
+        .s1_terminal {
+            border: 2px solid #0f0; padding: 40px; width: 300px;
+            background: rgba(0, 20, 0, 0.95); box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+            font-family: 'Courier New', monospace; text-align: center; position: relative; z-index: 10;
+        }
+        .s1_text { color: #0f0; font-size: 1rem; text-align: left; margin-bottom: 20px; min-height: 60px; text-shadow: 0 0 5px #0f0; }
+        .s1_input { background: transparent; border: none; border-bottom: 2px solid #0f0; color: #fff; font-size: 1.5rem; text-align: center; width: 80%; outline: none; margin-bottom: 20px; }
+        .s1_btn { background: #0f0; color: #000; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; width: 100%; }
+        .s1_btn:hover { background: #fff; box-shadow: 0 0 15px #fff; }
+
+        /* =========================================
+           SCENE 2 STYLE: 走位測試 (惡搞按鈕)
+           ========================================= */
+        .s2_card { background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; backdrop-filter: blur(10px); text-align: center; border: 1px solid rgba(255,255,255,0.2); z-index: 10; width: 300px; }
+        .s2_btn_ok { padding: 10px 30px; background: #ff4d6d; color: white; border: none; border-radius: 50px; cursor: pointer; font-size: 1rem; }
+        .s2_btn_run { padding: 10px 30px; background: #666; color: white; border: none; border-radius: 50px; cursor: pointer; font-size: 1rem; position: absolute; transition: 0.1s; }
+
+        /* =========================================
+           SCENE 3 STYLE: 真心話測試
+           ========================================= */
+        .s3_card { background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; backdrop-filter: blur(10px); text-align: center; border: 1px solid rgba(255,255,255,0.2); z-index: 10; width: 300px; }
+        .s3_btn { padding: 10px 20px; margin: 10px; border-radius: 10px; border: none; cursor: pointer; font-size: 1rem; transition: 0.3s; }
+        .s3_bad { background: #444; color: #fff; }
+        .s3_good { background: #ff4d6d; color: #fff; }
+
+        /* =========================================
+           SCENE 4 STYLE: 照片回憶流
+           ========================================= */
+        .s4_container { width: 90%; max-width: 500px; text-align: center; z-index: 10; }
+        .s4_photo_frame { 
+            width: 100%; height: 350px; background: #000; border: 2px solid #fff; 
+            display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 20px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+        .s4_img { max-width: 100%; max-height: 100%; object-fit: contain; animation: fadeIn 1s ease; }
+        .s4_caption { font-size: 1.2rem; margin-bottom: 20px; min-height: 30px; text-shadow: 1px 1px 5px #000; }
+        .s4_btn { padding: 10px 30px; background: rgba(255,255,255,0.2); border: 1px solid #fff; color: #fff; cursor: pointer; border-radius: 30px; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        /* =========================================
+           SCENE 5 STYLE: 蛋糕與許願
+           ========================================= */
+        .s5_container { text-align: center; z-index: 10; }
+        .s5_cake_box { position: relative; width: 200px; height: 200px; margin: 0 auto; }
+        /* 簡易精緻蛋糕 CSS */
+        .s5_cake_base { position: absolute; bottom: 20px; left: 25px; width: 150px; height: 60px; background: #f5c096; border-radius: 10px; }
+        .s5_cake_top { position: absolute; bottom: 80px; left: 25px; width: 150px; height: 50px; background: #ffbcd9; border-radius: 15px 15px 5px 5px; }
+        .s5_candle { position: absolute; bottom: 130px; left: 95px; width: 10px; height: 40px; background: #fff; z-index: 2; }
+        .s5_flame { 
+            position: absolute; top: -20px; left: -2px; width: 14px; height: 20px; background: #ffcc00; 
+            border-radius: 50% 50% 20% 20%; animation: flicker 0.5s infinite alternate; display: none; 
+            box-shadow: 0 0 20px #ff6600;
+        }
+        .s5_btn { margin-top: 30px; padding: 12px 30px; background: #ff4d6d; color: white; border: none; border-radius: 50px; cursor: pointer; font-size: 1.2rem; font-weight: bold; }
+        @keyframes flicker { from { opacity: 0.8; transform: scale(1); } to { opacity: 1; transform: scale(1.1); } }
+
+        /* =========================================
+           SCENE 6 STYLE: 信封與結尾
+           ========================================= */
+        .s6_envelope { 
+            width: 300px; height: 200px; background: #ff758c; position: relative; margin: 0 auto;
+            cursor: pointer; transform: scale(0); transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 20; border-radius: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .s6_flap { position: absolute; top: 0; left: 0; border-left: 150px solid transparent; border-right: 150px solid transparent; border-top: 110px solid #ff9a9e; transform-origin: top; transition: 0.6s; }
+        .s6_letter {
+            position: absolute; top: 10px; left: 15px; width: 270px; height: 300px; background: #fff; color: #333;
+            padding: 20px; box-sizing: border-box; font-size: 1rem; line-height: 1.6; border-radius: 5px;
+            transform: translateY(0); transition: 1s; opacity: 0; text-align: left;
+        }
+        /* 開信動畫 */
+        .s6_open .s6_flap { transform: rotateX(180deg); }
+        .s6_open .s6_letter { transform: translateY(-150px); opacity: 1; z-index: 50; }
     </style>
 </head>
 <body>
 
     <div id="fireworks-canvas"></div>
-
+    <video muted loop playsinline id="bg-video"><source src="bgvideo.mp4" type="video/mp4"></video>
+    
+    <audio id="sfx-login"><source src="sfx_login.mp3" type="audio/mpeg"></audio>
     <audio id="bgm-login" loop><source src="bg_login.mp3" type="audio/mpeg"></audio>
     <audio id="bgm-memory" loop><source src="bg_memory.mp3" type="audio/mpeg"></audio>
     <audio id="bgm-party" loop><source src="bg_party.mp3" type="audio/mpeg"></audio>
 
-
-    <div id="scene-1" class="scene active">
-        <h2>🔒 系統登入</h2>
-        <p>請輸入 Player 21 ID 密碼</p>
-        <input type="password" id="inp-password" placeholder="0121" style="padding:10px;">
-        <br>
-        <button onclick="checkLogin()">登入系統</button>
-    </div>
-
-
-    <div id="scene-2" class="scene">
-        <h2>⚠️ 安全性驗證 I</h2>
-        <p>準備好進入 21 歲副本了嗎？</p>
-        <div style="height: 150px; position: relative;">
-            <button onclick="gotoScene(3)">準備好了！</button>
-            <button id="btn-runaway" onmouseover="runAway()" onclick="runAway()" style="position: absolute;">還沒...</button>
+    <div id="scene-1" class="scene-container active">
+        <div class="s1_terminal">
+            <div class="s1_text" id="s1-msg"></div>
+            <input type="password" id="s1-input" class="s1_input" placeholder="ACCESS CODE">
+            <button class="s1_btn" onclick="s1_login()">[ ENTER ]</button>
         </div>
     </div>
 
-
-    <div id="scene-3" class="scene">
-        <h2>⚠️ 安全性驗證 II</h2>
-        <p>請問製作這個網頁的人技術如何？</p>
-        <button onclick="honestyCheck(false)">根本菜雞</button>
-        <button onclick="honestyCheck(true)">神級操作</button>
-    </div>
-
-
-    <div id="scene-4" class="scene">
-        <h3 id="photo-counter">回憶讀取中...</h3>
-        <div id="photo-display">
-            <img id="photo-img" src="" alt="Photo">
-        </div>
-        <div id="photo-caption"></div>
-        <button onclick="nextPhoto()">下一張 (點擊繼續)</button>
-    </div>
-
-
-    <div id="scene-5" class="scene">
-        <h2>🎉 Level 21 Unlocked!</h2>
-        <div class="simple-cake">🎂 蛋糕準備中</div>
-        <p>許個願吧！</p>
-        <button onclick="lightCandle()">點燃聖火 (開始慶祝)</button>
-    </div>
-
-
-    <div id="scene-6" class="scene" style="background: rgba(0,0,0,0.8);">
-        <h2>🎁 獲得傳說級掉落物</h2>
-        <p>檢測到一個未開啟的信件...</p>
-        
-        <div id="letter-box" style="display:block;" onclick="openLetter()">
-            📩 點擊開啟信件
-        </div>
-
-        <div id="final-message">
+    <div id="scene-2" class="scene-container">
+        <div class="s2_card">
+            <h2>⚠️ 安全性驗證 I</h2>
+            <p>準備好進入 21 歲副本了嗎？</p>
+            <div style="height: 100px; position: relative; margin-top: 30px;">
+                <button class="s2_btn_ok" onclick="gotoScene(3)">準備好了！</button>
+                <button id="s2-run-btn" class="s2_btn_run" onmouseover="s2_runAway()" onclick="s2_runAway()" style="top:0; left: 60%;">還沒...</button>
             </div>
+        </div>
     </div>
 
+    <div id="scene-3" class="scene-container">
+        <div class="s3_card">
+            <h2>⚠️ 安全性驗證 II</h2>
+            <p>製作這個網頁的人技術如何？</p>
+            <div style="margin-top: 30px;">
+                <button class="s3_btn s3_bad" onclick="s3_check(false)">根本菜雞</button>
+                <button class="s3_btn s3_good" onclick="s3_check(true)">神級操作</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="scene-4" class="scene-container">
+        <div class="s4_container">
+            <h3 id="s4-counter">Loading Memories...</h3>
+            <div class="s4_photo_frame">
+                <img id="s4-img" class="s4_img" src="" alt="Memory">
+            </div>
+            <div id="s4-caption" class="s4_caption"></div>
+            <button class="s4_btn" onclick="s4_next()">下一張</button>
+        </div>
+    </div>
+
+    <div id="scene-5" class="scene-container">
+        <div class="s5_container">
+            <h1>Level 21 Unlocked!</h1>
+            <div class="s5_cake_box">
+                <div class="s5_cake_base"></div>
+                <div class="s5_cake_top"></div>
+                <div class="s5_candle"><div id="s5-flame" class="s5_flame"></div></div>
+            </div>
+            <button class="s5_btn" onclick="s5_lightUp()">點燃聖火</button>
+        </div>
+    </div>
+
+    <div id="scene-6" class="scene-container">
+        <div id="s6-envelope" class="s6_envelope" onclick="s6_open()">
+            <div class="s6_flap"></div>
+            <div class="s6_letter" id="s6-content">
+                </div>
+        </div>
+        <h2 style="margin-top: 250px;">👇 點擊開啟掉落物</h2>
+    </div>
 
     <script>
-        // ============ 1. CONFIG: 資料設定區 ============
+        // =========================================
+        // CONFIG: 請在這裡修改你的內容
+        // =========================================
         const CONFIG = {
+            targetName: "夥伴",  // 她的名字
             password: "0121",
-            // 照片清單：請確保你有 photo1.jpg 到 photo5.jpg (或是你改檔名)
-            // 先用假圖 (Placeholder) 測試功能，你可以之後換成真圖
+            
+            // 第四幕：照片清單 (請上傳對應照片)
             photos: [
                 { src: "photo1.jpg", text: "這是我們第一次組隊..." },
                 { src: "photo2.jpg", text: "那時候妳還在雷..." },
-                { src: "photo3.jpg", text: "終於贏了一場！" },
-                // ... 你可以加更多
+                { src: "photo3.jpg", text: "終於贏了一場！" }
             ],
+            
+            // 第六幕：最後的信
             finalLetter: `
-                <strong>To 21歲的妳：</strong><br><br>
-                生日快樂！這是一封藏在程式碼後的信。<br>
+                <h3>Happy Birthday!</h3>
+                <p>這是一封藏在程式碼後的信。<br>
                 雖然只是簡單的網頁，<br>
                 但包含了我們這一年滿滿的回憶。<br>
-                祝妳升級快樂，繼續 Carry 我！
+                祝妳升級快樂，繼續 Carry 我！</p>
             `
         };
 
-        // 全域變數
-        let currentPhotoIndex = 0;
+        // 初始化煙火
         const fireworks = new Fireworks.default(document.querySelector('#fireworks-canvas'));
 
-        // ============ 2. 功能函式 ============
-
-        // 切換場景通用函式
-        function gotoScene(sceneNum) {
-            // 隱藏所有場景
-            document.querySelectorAll('.scene').forEach(el => el.classList.remove('active'));
-            // 顯示目標場景
-            document.getElementById(`scene-${sceneNum}`).classList.add('active');
+        // 通用：切換場景函式
+        function gotoScene(n) {
+            document.querySelectorAll('.scene-container').forEach(el => el.classList.remove('active'));
+            document.getElementById(`scene-${n}`).classList.add('active');
             
-            // 音樂切換邏輯 (簡單版)
-            if(sceneNum === 4) playMusic('bgm-memory'); // 進入照片區播溫馨音樂
-            if(sceneNum === 5) playMusic('bgm-party');  // 進入蛋糕區播嗨歌
+            // 音樂自動切換邏輯
+            if(n === 4) switchMusic('bgm-memory');
+            if(n === 5) switchMusic('bgm-party');
         }
 
-        // 音樂播放器
-        function playMusic(id) {
-            // 先暫停所有音樂
-            document.querySelectorAll('audio').forEach(audio => {
-                audio.pause();
-                audio.currentTime = 0;
-            });
-            // 播放指定音樂
-            const target = document.getElementById(id);
-            if(target) target.play().catch(e => console.log("音樂播放受阻(正常現象):", e));
+        function switchMusic(id) {
+            document.querySelectorAll('audio').forEach(a => { a.pause(); a.currentTime = 0; });
+            document.getElementById(id).play().catch(()=>{});
         }
 
-        // --- Scene 1: 登入 ---
-        function checkLogin() {
-            const input = document.getElementById('inp-password').value;
-            if(input === CONFIG.password) {
-                playMusic('bgm-login');
-                gotoScene(2);
+        // =========================================
+        // SCENE 1 LOGIC: 終端機
+        // =========================================
+        window.onload = function() {
+            const msg = `> SYSTEM DETECTED...\n> ID: ${CONFIG.targetName}\n> REQUESTING ACCESS..._`;
+            const el = document.getElementById('s1-msg');
+            let i = 0;
+            function type() { 
+                if(i < msg.length) { el.innerHTML = msg.substring(0, i+1).replace(/\n/g, "<br>"); i++; setTimeout(type, 50); }
+            }
+            type();
+        };
+
+        function s1_login() {
+            if(document.getElementById('s1-input').value === CONFIG.password) {
+                document.getElementById('sfx-login').play().catch(()=>{});
+                switchMusic('bgm-login');
+                
+                // 視覺回饋
+                document.querySelector('.s1_terminal').style.borderColor = "#fff";
+                document.querySelector('.s1_terminal').style.boxShadow = "0 0 30px #fff";
+                
+                // 背景影片淡入
+                const vid = document.getElementById('bg-video'); vid.play(); vid.style.opacity = 1;
+
+                setTimeout(() => gotoScene(2), 1500);
             } else {
-                alert("密碼錯誤！提示：生日");
+                alert("ACCESS DENIED");
+                document.getElementById('s1-input').value = "";
             }
         }
 
-        // --- Scene 2: 逃跑按鈕 ---
-        function runAway() {
-            const btn = document.getElementById('btn-runaway');
-            // 讓它在場景框框內亂跑
-            const x = Math.random() * 200 - 100; // -100 到 100
-            const y = Math.random() * 200 - 100;
+        // =========================================
+        // SCENE 2 LOGIC: 走位按鈕
+        // =========================================
+        function s2_runAway() {
+            const btn = document.getElementById('s2-run-btn');
+            const x = Math.random() * 200 - 100;
+            const y = Math.random() * 150 - 50;
             btn.style.transform = `translate(${x}px, ${y}px)`;
-            btn.innerText = "抓不到！";
+            btn.innerText = "抓不到~";
         }
 
-        // --- Scene 3: 誠實測試 ---
-        function honestyCheck(isPro) {
-            if(isPro) {
-                alert("驗證通過！算妳識相 XD");
-                // 初始化照片區，準備進入下一關
-                loadPhoto(0);
+        // =========================================
+        // SCENE 3 LOGIC: 誠實測試
+        // =========================================
+        function s3_check(isGood) {
+            if(isGood) {
+                alert("驗證通過！進入回憶資料庫...");
+                s4_load(0); // 預先載入第一張照片
                 gotoScene(4);
             } else {
-                alert("⛔ 系統錯誤！偵測到謊言，請重選！");
+                alert("⚠️ 系統錯誤！請摸著良心重選！");
             }
         }
 
-        // --- Scene 4: 照片流動 ---
-        function loadPhoto(index) {
-            if(index >= CONFIG.photos.length) {
-                // 照片播完了，進入下一關
-                gotoScene(5);
-                return;
-            }
-            const data = CONFIG.photos[index];
-            
-            // 如果你還沒上傳照片，這裡會顯示破圖 icon，但不影響功能測試
-            document.getElementById('photo-img').src = data.src; 
-            document.getElementById('photo-caption').innerText = data.text;
-            document.getElementById('photo-counter').innerText = `回憶讀取中... (${index + 1}/${CONFIG.photos.length})`;
-            
-            currentPhotoIndex = index;
+        // =========================================
+        // SCENE 4 LOGIC: 照片流
+        // =========================================
+        let photoIndex = 0;
+        function s4_load(i) {
+            if(i >= CONFIG.photos.length) { gotoScene(5); return; }
+            const p = CONFIG.photos[i];
+            document.getElementById('s4-img').src = p.src;
+            document.getElementById('s4-caption').innerText = p.text;
+            document.getElementById('s4-counter').innerText = `Memory ${i+1}/${CONFIG.photos.length}`;
+            photoIndex = i;
         }
+        function s4_next() { s4_load(photoIndex + 1); }
 
-        function nextPhoto() {
-            loadPhoto(currentPhotoIndex + 1);
-        }
-
-        // --- Scene 5: 點火 ---
-        function lightCandle() {
-            // 啟動煙火
+        // =========================================
+        // SCENE 5 LOGIC: 蛋糕
+        // =========================================
+        function s5_lightUp() {
+            document.getElementById('s5-flame').style.display = "block";
             fireworks.start();
-            // 進入最後一幕
-            gotoScene(6);
+            
+            // 延遲後進入信封
+            setTimeout(() => {
+                gotoScene(6);
+                // 讓信封飛入
+                setTimeout(() => {
+                    document.getElementById('s6-envelope').style.transform = "scale(1)";
+                }, 500);
+            }, 3000);
         }
 
-        // --- Scene 6: 開信 ---
-        function openLetter() {
-            const box = document.getElementById('letter-box');
-            const msg = document.getElementById('final-message');
-            
-            box.style.display = 'none'; // 隱藏按鈕
-            msg.innerHTML = CONFIG.finalLetter; // 填入內容
-            msg.style.display = 'block'; // 顯示信件
+        // =========================================
+        // SCENE 6 LOGIC: 信封
+        // =========================================
+        document.getElementById('s6-content').innerHTML = CONFIG.finalLetter;
+        function s6_open() {
+            document.getElementById('s6-envelope').classList.add('s6_open');
         }
 
     </script>
