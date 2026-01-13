@@ -162,7 +162,7 @@
             
             <div id="s1-input-area">
                 <input type="password" id="s1-input" class="s1_input" placeholder="****">
-                <button class="s1_btn" onclick="s1_login()">[訪問系統]</button>
+                <button class="s1_btn" onclick="s1_login()"> 訪問系統 </button>
             </div>
 
             <div id="s1-loading" class="s1_loading_container">
@@ -288,7 +288,7 @@
         // =========================================
         window.onload = function() {
             // 這裡修改開場的系統文字
-            const msg = `> 系統偵測啟動...\n> 玩家 ID: [${CONFIG.targetName}]\n> 發現生日數據流，正在解析...\n> 請求存取權限..._`;
+            const msg = `> 系統偵測啟動...\n> 玩家 ID: ${CONFIG.targetName}\n> 發現生日數據流，正在解析...\n> 請求存取權限...`;
             const el = document.getElementById('s1-msg');
             let i = 0;
             function type() { 
@@ -310,7 +310,7 @@
                 s1_startLoading();
             } else {
                 // 這裡修改錯誤訊息
-                alert("拒絕存取：密碼錯誤 (提示：生日)");
+                alert("拒絕存取：密碼錯誤 ");
                 document.getElementById('s1-input').value = "";
             }
         }
@@ -450,6 +450,7 @@
     </script>
 </body>
 </html>
+
 
 
 
