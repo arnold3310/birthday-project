@@ -23,18 +23,26 @@
         #fireworks-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
         #bg-video { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; filter: brightness(0.4); opacity: 0; transition: opacity 2s ease-in; }
 
-        /* =========================================
-           SCENE 1 STYLE: 終端機登入
+/* =========================================
+           SCENE 1 STYLE: 終端機登入 (精緻增強版)
            ========================================= */
         .s1_terminal {
-            border: 2px solid #0f0; padding: 40px; width: 300px;
-            background: rgba(0, 20, 0, 0.95); box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+            border: 1px solid #0f0; padding: 40px; width: 85%; max-width: 400px;
+            background: rgba(0, 20, 0, 0.9); 
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2), inset 0 0 10px rgba(0, 255, 0, 0.1);
             font-family: 'Courier New', monospace; text-align: center; position: relative; z-index: 10;
+            border-radius: 5px;
         }
-        .s1_text { color: #0f0; font-size: 1rem; text-align: left; margin-bottom: 20px; min-height: 60px; text-shadow: 0 0 5px #0f0; }
-        .s1_input { background: transparent; border: none; border-bottom: 2px solid #0f0; color: #fff; font-size: 1.5rem; text-align: center; width: 80%; outline: none; margin-bottom: 20px; }
-        .s1_btn { background: #0f0; color: #000; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; width: 100%; }
-        .s1_btn:hover { background: #fff; box-shadow: 0 0 15px #fff; }
+        .s1_text { color: #0f0; font-size: 1rem; text-align: left; margin-bottom: 20px; min-height: 80px; text-shadow: 0 0 5px #0f0; line-height: 1.5; }
+        .s1_input { background: transparent; border: none; border-bottom: 2px solid #0f0; color: #fff; font-size: 1.5rem; text-align: center; width: 80%; outline: none; margin-bottom: 25px; letter-spacing: 5px; }
+        .s1_btn { background: #0f0; color: #000; border: none; padding: 12px 20px; font-weight: bold; cursor: pointer; width: 100%; font-size: 1.1rem; transition: 0.3s; }
+        .s1_btn:hover { background: #fff; box-shadow: 0 0 20px #fff; }
+
+        /* 進度條樣式 */
+        .s1_loading_container { display: none; width: 100%; margin-top: 20px; text-align: left; }
+        .s1_loading_bar_bg { width: 100%; height: 10px; background: rgba(0, 255, 0, 0.1); border: 1px solid #0f0; margin-top: 10px; position: relative; }
+        .s1_loading_bar_fill { width: 0%; height: 100%; background: #0f0; box-shadow: 0 0 10px #0f0; transition: width 0.1s linear; }
+        .s1_status { color: #0f0; font-size: 0.8rem; margin-top: 5px; }}
 
         /* =========================================
            SCENE 2 STYLE: 走位測試 (惡搞按鈕)
@@ -112,17 +120,29 @@
     <audio id="bgm-party" loop><source src="bg_party.mp3" type="audio/mpeg"></audio>
 
     <div id="scene-1" class="scene-container active">
-        <div class="s1_terminal">
+        <div class="s1_terminal" id="s1-terminal">
             <div class="s1_text" id="s1-msg"></div>
-            <input type="password" id="s1-input" class="s1_input" placeholder="ACCESS CODE">
-            <button class="s1_btn" onclick="s1_login()">[ ENTER ]</button>
+            
+            <div id="s1-input-area">
+                <input type="password" id="s1-input" class="s1_input" placeholder="****">
+                <button class="s1_btn" onclick="s1_login()">[ ACCESS SYSTEM ]</button>
+            </div>
+
+            <div id="s1-loading" class="s1_loading_container">
+                <div id="s1-loading-msg" style="color:#0f0;">LOGIN SUCCESSFUL...</div>
+                <div class="s1_loading_bar_bg">
+                    <div id="s1-bar-fill" class="s1_loading_bar_fill"></div>
+                </div>
+                <div class="s1_status">LOADING: <span id="s1-percent">0</span>%</div>
+                <div id="s1-log" style="font-size: 0.7rem; color: #0f0; margin-top: 10px; text-align: left; opacity: 0.7;"></div>
+            </div>
         </div>
     </div>
 
     <div id="scene-2" class="scene-container">
         <div class="s2_card">
             <h2>⚠️ 安全性驗證 I</h2>
-            <p>準備好進入 21 歲副本了嗎？</p>
+            <p>準備好進入遊戲副本了嗎？</p>
             <div style="height: 100px; position: relative; margin-top: 30px;">
                 <button class="s2_btn_ok" onclick="gotoScene(3)">準備好了！</button>
                 <button id="s2-run-btn" class="s2_btn_run" onmouseover="s2_runAway()" onclick="s2_runAway()" style="top:0; left: 60%;">還沒...</button>
@@ -136,7 +156,7 @@
             <p>製作這個網頁的人技術如何？</p>
             <div style="margin-top: 30px;">
                 <button class="s3_btn s3_bad" onclick="s3_check(false)">根本菜雞</button>
-                <button class="s3_btn s3_good" onclick="s3_check(true)">神級操作</button>
+                <button class="s3_btn s3_good" onclick="s3_check(true)">操作大神</button>
             </div>
         </div>
     </div>
@@ -181,7 +201,7 @@
         // CONFIG: 請在這裡修改你的內容
         // =========================================
         const CONFIG = {
-            targetName: "夥伴",  // 她的名字
+            targetName: "楊雅羽",  // 她的名字
             password: "0121",
             
             // 第四幕：照片清單 (請上傳對應照片)
@@ -220,35 +240,81 @@
         }
 
         // =========================================
-        // SCENE 1 LOGIC: 終端機
+        // SCENE 1 LOGIC: 終端機 (打字 + 登入 + 進度條)
         // =========================================
+        
+        // 頁面啟動時的打字特效
         window.onload = function() {
-            const msg = `> SYSTEM DETECTED...\n> ID: ${CONFIG.targetName}\n> REQUESTING ACCESS..._`;
+            const msg = `> SYSTEM DETECTED...\n> PLAYER ID: [${CONFIG.targetName}]\n> BIRTHDAY DATA STREAM FOUND.\n> REQUESTING ACCESS PERMISSION..._`;
             const el = document.getElementById('s1-msg');
             let i = 0;
             function type() { 
-                if(i < msg.length) { el.innerHTML = msg.substring(0, i+1).replace(/\n/g, "<br>"); i++; setTimeout(type, 50); }
+                if(i < msg.length) { 
+                    el.innerHTML = msg.substring(0, i+1).replace(/\n/g, "<br>"); 
+                    i++; setTimeout(type, 50); 
+                }
             }
             type();
         };
 
         function s1_login() {
-            if(document.getElementById('s1-input').value === CONFIG.password) {
+            const inputVal = document.getElementById('s1-input').value;
+            if(inputVal === CONFIG.password) {
+                // 1. 播放登入音效 (Ding!)
                 document.getElementById('sfx-login').play().catch(()=>{});
-                switchMusic('bgm-login');
                 
-                // 視覺回饋
-                document.querySelector('.s1_terminal').style.borderColor = "#fff";
-                document.querySelector('.s1_terminal').style.boxShadow = "0 0 30px #fff";
+                // 2. 隱藏輸入區，顯示進度條
+                document.getElementById('s1-input-area').style.display = 'none';
+                document.getElementById('s1-loading').style.display = 'block';
                 
-                // 背景影片淡入
-                const vid = document.getElementById('bg-video'); vid.play(); vid.style.opacity = 1;
-
-                setTimeout(() => gotoScene(2), 1500);
+                // 3. 開始跑進度條
+                s1_startLoading();
             } else {
-                alert("ACCESS DENIED");
+                alert("ACCESS DENIED: 密碼錯誤");
                 document.getElementById('s1-input').value = "";
             }
+        }
+
+        function s1_startLoading() {
+            let percent = 0;
+            const bar = document.getElementById('s1-bar-fill');
+            const percentText = document.getElementById('s1-percent');
+            const logText = document.getElementById('s1-log');
+            
+            const logs = [
+                "Initializing core modules...",
+                "Syncing birthday memories...",
+                "Loading game assets...",
+                "Bypassing security filters...",
+                "Connecting to Player 21 server...",
+                "Finalizing environment..."
+            ];
+
+            const timer = setInterval(() => {
+                percent += Math.floor(Math.random() * 3) + 1; // 隨機增加 1~3%
+                if (percent >= 100) {
+                    percent = 100;
+                    clearInterval(timer);
+                    
+                    // 跑完 100% 後的動作
+                    document.getElementById('s1-loading-msg').innerText = "GAME STARTING...";
+                    setTimeout(() => {
+                        // 背景影片與音樂啟動
+                        const vid = document.getElementById('bg-video'); vid.play(); vid.style.opacity = 1;
+                        switchMusic('bgm-login');
+                        gotoScene(2);
+                    }, 1000);
+                }
+                
+                // 更新進度條介面
+                bar.style.width = percent + "%";
+                percentText.innerText = percent;
+                
+                // 隨機跳出一些系統紀錄字樣
+                if (percent % 15 === 0) {
+                    logText.innerText = "> " + logs[Math.floor(Math.random() * logs.length)];
+                }
+            }, 50); // 控制跑條的速度
         }
 
         // =========================================
@@ -330,3 +396,4 @@
     </script>
 </body>
 </html>
+
