@@ -216,7 +216,7 @@
     <script>
         // =========================================
         // CONFIG: 請在這裡修改你的內容
-        // =========================================
+        / =========================================
         const CONFIG = {
             targetName: "夥伴",  // 她的名字
             password: "0121",
@@ -240,6 +240,63 @@
 
         // 初始化煙火
         const fireworks = new Fireworks.default(document.querySelector('#fireworks-canvas'));
+
+        ㄩ
+        // =========================================
+        // 新增功能：駭客任務數字雨背景特效
+        // =========================================
+        (function() {
+            const canvas = document.getElementById('hacker-bg');
+            const ctx = canvas.getContext('2d');
+
+            // 設定畫布大小為全螢幕
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            // 定義要下墜的字元 (可以自己改，這裡用數字和英文)
+            const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const charArray = chars.split('');
+            const fontSize = 16;
+            const columns = canvas.width / fontSize; // 計算螢幕可以放幾行
+
+            // 每一行的下墜位置 (Y座標)
+            const drops = [];
+            for (let i = 0; i < columns; i++) {
+                drops[i] = 1;
+            }
+
+            // 繪製動畫的函數
+            function drawMatrix() {
+                // 每一幀都用半透明黑色覆蓋，製造「拖尾」效果
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // 設定文字顏色為螢光綠
+                ctx.fillStyle = '#0F0'; 
+                ctx.font = fontSize + 'px monospace';
+
+                // 迴圈繪製每一行的字元
+                for (let i = 0; i < drops.length; i++) {
+                    const text = charArray[Math.floor(Math.random() * charArray.length)];
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                    // 如果掉出螢幕底部，隨機重置到頂部
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    // Y座標往下移
+                    drops[i]++;
+                }
+            }
+            // 每 33 毫秒重繪一次 (約 30fps)
+            setInterval(drawMatrix, 33);
+
+            // 視窗大小改變時重新設定畫布
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        })();
 
         // 通用：切換場景函式
         function gotoScene(n) {
@@ -312,20 +369,22 @@
                     percent = 100;
                     clearInterval(timer);
                     
-                    // 這裡修改跑完後的文字
                     document.getElementById('s1-loading-msg').innerText = "準備進入遊戲...";
+                    
+                    // 👇👇👇 修改這裡 👇👇👇
                     setTimeout(() => {
-                        const vid = document.getElementById('bg-video'); vid.play(); vid.style.opacity = 1;
+                        // 1. 讓駭客背景淡出
+                        document.getElementById('hacker-bg').style.opacity = 0;
+                        
+                        // 2. 播放海邊影片並淡入
+                        const vid = document.getElementById('bg-video'); 
+                        vid.play(); 
+                        vid.style.opacity = 1;
+                        
                         switchMusic('bgm-login');
                         gotoScene(2);
                     }, 1000);
-                }
-                
-                bar.style.width = percent + "%";
-                percentText.innerText = percent;
-                
-                if (percent % 15 === 0) {
-                    logText.innerText = "> " + logs[Math.floor(Math.random() * logs.length)];
+                    // 👆👆👆 修改結束 👆👆👆
                 }
             }, 50);
         }
@@ -404,6 +463,7 @@
     </script>
 </body>
 </html>
+
 
 
 
