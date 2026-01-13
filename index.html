@@ -141,41 +141,67 @@
             z-index: 100; /* 確保在最上層 */
         }
 
-        /* =========================================
-           SCENE 3 STYLE: 誠實豆沙包 (進化版)
+/* =========================================
+           SCENE 3 STYLE: 故障防護版
            ========================================= */
         .s3_card { 
-            background: rgba(255, 255, 255, 0.1); 
-            padding: 40px; border-radius: 20px; 
-            backdrop-filter: blur(10px); text-align: center; 
-            border: 1px solid rgba(255, 255, 255, 0.2); 
-            z-index: 10; width: 350px;
-            transition: filter 0.3s ease; /* 為了視力模糊效果 */
+            background: rgba(10, 10, 10, 0.95); /* 深色背景 */
+            padding: 40px; border-radius: 10px; 
+            text-align: center; 
+            border: 1px solid #333;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
+            z-index: 10; width: 350px; position: relative;
         }
-        
-        /* 藍屏畫面 (預設隱藏) */
-        #s3-bsod {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #0000aa; color: #fff; font-family: 'Consolas', monospace;
-            display: none; flex-direction: column; justify-content: center;
-            align-items: center; padding: 50px; z-index: 9999; text-align: left;
-        }
+        .s3_card h2 { text-shadow: 0 0 10px #ff4d6d; letter-spacing: 2px; }
 
-        .s3_btn_container { display: flex; justify-content: center; gap: 20px; margin-top: 30px; position: relative; height: 100px; }
+        /* 按鈕容器：設為 relative 讓普通按鈕可以在裡面跑 */
+        .s3_btn_container { 
+            position: relative; 
+            height: 120px; /* 給足夠空間讓它跳 */
+            width: 100%;
+            margin-top: 20px;
+            overflow: hidden; /* 確保不出界 */
+            border: 1px dashed rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
         
-        /* 超級帥按鈕 */
-        .s3_btn_cool { padding: 12px 25px; background: #ff4d6d; color: #fff; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; z-index: 11; }
+        /* 正確選項 (帥氣霓虹) */
+        .s3_btn_cool { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            padding: 12px 30px; background: transparent; color: #00f0ff; 
+            border: 2px solid #00f0ff; border-radius: 5px; 
+            font-size: 1.1rem; font-weight: bold; cursor: pointer; z-index: 20;
+            box-shadow: 0 0 15px #00f0ff; transition: 0.3s;
+        }
+        .s3_btn_cool:hover { background: #00f0ff; color: #000; box-shadow: 0 0 30px #00f0ff; }
         
-        /* 普通按鈕 (磁鐵效應) */
+        /* 惡搞選項 (故障風格) */
         .s3_btn_normal { 
-            padding: 12px 25px; background: #555; color: #ccc; border: none; 
-            border-radius: 50px; cursor: pointer; position: absolute; 
-            transition: transform 0.1s ease-out; /* 平滑移動 */
+            position: absolute; padding: 10px 20px; 
+            background: #333; color: #888; border: 1px solid #555; 
+            border-radius: 5px; cursor: pointer; font-size: 0.9rem;
+            transition: all 0.1s; /* 快速反應 */
+            z-index: 10;
         }
-
-        /* 警告文字提示 */
-        #s3-warning { color: #ffeb3b; font-size: 0.8rem; margin-top: 15px; display: none; font-weight: bold; }
-
+        /* 觸發故障時的樣子 */
+        .s3_glitch {
+            background: #ff003c !important; color: #fff !important; border-color: #ff003c !important;
+            animation: shake 0.2s infinite;
+            box-shadow: 0 0 15px #ff003c;
+        }
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
         /* =========================================
            SCENE 4 STYLE: 照片回憶流
            ========================================= */
@@ -498,64 +524,57 @@
         // SCENE 3 LOGIC: 誠實測試
         // =========================================
 // =========================================
-        // SCENE 3 LOGIC: 磁鐵效應 + 視力模糊 + 藍屏
+        // SCENE 3 LOGIC: 故障防護 (範圍內瞬移)
         // =========================================
         
-        let s3_btnX = 0;
-        let s3_btnY = 0;
+        // 這裡不需要 mousemove 監聽了，改用 mouseover
+        // 請確保你的 HTML 裡的按鈕有 id="s3-normal-btn"
 
-        // 監聽滑鼠移動
-        document.addEventListener('mousemove', (e) => {
-            const scene3 = document.getElementById('scene-3');
-            if (!scene3.classList.contains('active')) return;
+        const normalBtn = document.getElementById('s3-normal-btn');
+        const btnContainer = document.querySelector('.s3_btn_container');
 
-            const btn = document.getElementById('s3-normal-btn');
-            const card = document.getElementById('s3-card');
-            const warning = document.getElementById('s3-warning');
+        // 當滑鼠碰到普通按鈕
+        normalBtn.addEventListener('mouseover', () => {
+            // 1. 取得容器和按鈕的尺寸
+            const containerRect = btnContainer.getBoundingClientRect();
+            const btnRect = normalBtn.getBoundingClientRect();
+
+            // 2. 計算可移動的最大範圍 (寬度 - 按鈕寬度)
+            const maxX = containerRect.width - btnRect.width;
+            const maxY = containerRect.height - btnRect.height;
+
+            // 3. 隨機產生新座標
+            const newX = Math.floor(Math.random() * maxX);
+            const newY = Math.floor(Math.random() * maxY);
+
+            // 4. 設定新位置
+            normalBtn.style.left = newX + 'px';
+            normalBtn.style.top = newY + 'px';
+
+            // 5. 增加故障特效
+            normalBtn.classList.add('s3_glitch'); // 變紅抖動
             
-            const btnRect = btn.getBoundingClientRect();
-            const mouseX = e.clientX;
-            const mouseY = e.clientY;
+            // 6. 隨機變更文字
+            const texts = ["ERROR", "不可選", "404", "BUG", "NOPE", "禁止"];
+            normalBtn.innerText = texts[Math.floor(Math.random() * texts.length)];
 
-            // 計算按鈕中心
-            const btnCenterX = btnRect.left + btnRect.width / 2;
-            const btnCenterY = btnRect.top + btnRect.height / 2;
-
-            // 計算距離
-            const distance = Math.sqrt(Math.pow(mouseX - btnCenterX, 2) + Math.pow(mouseY - btnCenterY, 2));
-
-            // 1. 磁鐵效應 (當滑鼠靠近 100 像素內時推開)
-            if (distance < 120) {
-                const angle = Math.atan2(btnCenterY - mouseY, btnCenterX - mouseX);
-                const force = (120 - distance) / 2; // 距離越近推力越大
-                
-                s3_btnX += Math.cos(angle) * force;
-                s3_btnY += Math.sin(angle) * force;
-                
-                btn.style.transform = `translate(${s3_btnX}px, ${s3_btnY}px)`;
-
-                // 2. 視力模糊化 (視覺瓦斯燈)
-                const blurVal = (120 - distance) / 10;
-                card.style.filter = `blur(${blurVal}px) grayscale(${blurVal/5})`;
-                warning.style.display = 'block';
-            } else {
-                // 距離遠了就恢復
-                card.style.filter = `blur(0px) grayscale(0)`;
-                warning.style.display = 'none';
-            }
+            // 0.5秒後恢復冷靜 (可選)
+            setTimeout(() => {
+                normalBtn.classList.remove('s3_glitch');
+            }, 500);
         });
 
-        // 3. 虛假錯誤 (BSOD)
-        function s3_crash() {
-            document.getElementById('s3-bsod').style.display = 'flex';
-        }
-
+        // 虛假錯誤 (如果真的點到了)
+        function s3_crash() { document.getElementById('s3-bsod').style.display = 'flex'; }
         function s3_reboot() {
             document.getElementById('s3-bsod').style.display = 'none';
-            // 恢復按鈕位置
-            s3_btnX = 0; s3_btnY = 0;
-            document.getElementById('s3-normal-btn').style.transform = `translate(0,0)`;
+            // 歸位
+            normalBtn.style.left = '10px';
+            normalBtn.style.top = '10px';
+            normalBtn.innerText = "普通而已";
         }
+
+        // ... (原本的 s3_success 函式請保留，那是好的) ...
 
  // 4. 屈服後的浮誇慶祝 -> 修改為「特效轉場」
 // 3. 屈服後的浮誇慶祝 -> 修改為「特效轉場」
@@ -653,6 +672,7 @@
     </script>
 </body>
 </html>
+
 
 
 
