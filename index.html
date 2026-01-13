@@ -513,9 +513,11 @@
             btn.style.background = colors[Math.floor(Math.random() * colors.length)];
         }
 
+
         // =========================================
-        // SCENE 3 LOGIC: 誠實測試
+        // SCENE 3 LOGIC: 兩階段式互動 (當機 -> 閃避)
         // =========================================
+        
 // =========================================
         // SCENE 3 LOGIC: 最終優化版 (全卡片跑動)
         // =========================================
@@ -557,6 +559,74 @@
             alert("系統重啟完成。已啟用「審美強制校正」模組。");
         }
 
+        // 4. 移動邏輯 (範圍擴大到整張卡片)
+        function moveButton() {
+            // 取得「整張卡片」的尺寸
+            const containerRect = cardArea.getBoundingClientRect();
+            const btnRect = normalBtn.getBoundingClientRect();
+
+            // 為了不蓋住標題，我們把 Y 軸的起始點設在卡片高度的 30% 之後
+            const minY = containerRect.height * 0.3; 
+            const maxX = containerRect.width - btnRect.width - 20; // 減20保留邊距
+            const maxY = containerRect.height - btnRect.height - 20;
+
+            let newX, newY;
+            
+            // 簡單隨機位置 (加上 min Y 限制，不讓它跑去遮標題)
+            newX = Math.floor(Math.random() * maxX);
+            newY = Math.floor(Math.random() * (maxY - minY) + minY);
+
+            normalBtn.style.left = newX + 'px';
+            normalBtn.style.top = newY + 'px';
+
+            // 故障特效
+            normalBtn.classList.add('s3_glitch'); 
+            const texts = ["ERROR", "不可選", "NOPE", "Forbidden"];
+            normalBtn.innerText = texts[Math.floor(Math.random() * texts.length)];
+
+            setTimeout(() => {
+                normalBtn.classList.remove('s3_glitch');
+            }, 500);
+        }
+
+        // 移動按鈕的函式 (保持不變)
+        function moveButton() {
+            const containerRect = btnContainer.getBoundingClientRect();
+            const btnRect = normalBtn.getBoundingClientRect();
+            const maxX = containerRect.width - btnRect.width;
+            const maxY = containerRect.height - btnRect.height;
+            let newX, newY;
+            let isOverlapping = true;
+            let safety = 0;
+
+            while (isOverlapping && safety < 50) {
+                newX = Math.floor(Math.random() * maxX);
+                newY = Math.floor(Math.random() * maxY);
+                const centerX = containerRect.width / 2;
+                const centerY = containerRect.height / 2;
+                const btnCenterX = newX + btnRect.width / 2;
+                const btnCenterY = newY + btnRect.height / 2;
+
+                if (Math.abs(btnCenterX - centerX) < 90 && Math.abs(btnCenterY - centerY) < 40) {
+                    isOverlapping = true;
+                } else {
+                    isOverlapping = false;
+                }
+                safety++;
+            }
+
+            normalBtn.style.left = newX + 'px';
+            normalBtn.style.top = newY + 'px';
+            normalBtn.classList.add('s3_glitch'); 
+            const texts = ["ERROR", "不可選", "NOPE", "Forbidden"];
+            normalBtn.innerText = texts[Math.floor(Math.random() * texts.length)];
+
+            setTimeout(() => {
+                normalBtn.classList.remove('s3_glitch');
+            }, 500);
+        }
+
+        // 成功的函式 (S3_SUCCESS) 保持原本的，不用動
         // 4. 移動邏輯 (範圍擴大到整張卡片)
         function moveButton() {
             // 取得「整張卡片」的尺寸
@@ -683,6 +753,7 @@
     </script>
 </body>
 </html>
+
 
 
 
