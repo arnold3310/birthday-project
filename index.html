@@ -176,12 +176,22 @@
         .s3_btn_cool:hover { background: #00f0ff; color: #000; box-shadow: 0 0 30px #00f0ff; }
         
         /* 惡搞選項 (故障風格) */
+        /* 惡搞選項 (故障風格) - 已修正大小與邊框 */
         .s3_btn_normal { 
-            position: absolute; padding: 10px 20px; 
-            background: #333; color: #888; border: 1px solid #555; 
-            border-radius: 5px; cursor: pointer; font-size: 0.9rem;
-            transition: all 0.1s; /* 快速反應 */
-            z-index: 10;
+        position: absolute;
+        /* 修改這裡：數值改成跟 Cool 按鈕一樣 */
+        padding: 12px 30px;       /* 原本是 10px 20px */
+        font-size: 1.1rem;        /* 原本是 0.9rem */
+        font-weight: bold;        /* 補上粗體，跟 Cool 按鈕一致 */
+        border: 2px solid #555;   /* 邊框加粗為 2px */
+    
+        background: #333; 
+        color: #888; 
+        border-radius: 5px; 
+        cursor: pointer; 
+        transition: all 0.1s;     /* 快速反應 */
+        z-index: 10001;           /* 💡改大一點，確保跑出框框後不會被其他圖層蓋住 */
+        }
         }
         /* 觸發故障時的樣子 */
         .s3_glitch {
@@ -572,54 +582,45 @@
             document.getElementById('s3-bsod').style.display = 'none';
             
             // 歸位按鈕
-            normalBtn.style.left = '10px';
-            normalBtn.style.top = '10px';
-            
-            // 💡 關鍵：開啟「困難模式」開關
-            s3_hardMode = true; 
-            
-            // 更改文字提示使用者變了
-            normalBtn.innerText = "普通(?!)";
-            alert("系統重啟完成。已啟用「審美強制校正」模組。");
+            normalBtn.style.position = 'fixed'; // 確保它是 fixed
+            normalBtn.style.left = '50%';
+            normalBtn.style.top = '60%';
+            normalBtn.style.transform = 'translate(-50%, -50%)'; // 讓它置中
+
+    s3_hardMode = true;
+    normalBtn.innerText = "普通(?!)";
         }
 
         // 移動按鈕的函式 (保持不變)
-        function moveButton() {
-            const containerRect = btnContainer.getBoundingClientRect();
-            const btnRect = normalBtn.getBoundingClientRect();
-            const maxX = containerRect.width - btnRect.width;
-            const maxY = containerRect.height - btnRect.height;
-            let newX, newY;
-            let isOverlapping = true;
-            let safety = 0;
+// 移動按鈕的函式 (全螢幕版)
+function moveButton() {
+    // 1. 強制改成 fixed 定位，這樣才能飛出原本的框框
+    normalBtn.style.position = 'fixed';
+    
+    // 2. 取得按鈕目前的尺寸
+    const btnRect = normalBtn.getBoundingClientRect();
+    
+    // 3. 計算範圍改成「整個視窗」 (扣除按鈕寬度以免跑出螢幕外)
+    const maxX = window.innerWidth - btnRect.width;
+    const maxY = window.innerHeight - btnRect.height;
+    
+    // 4. 計算隨機座標
+    const newX = Math.floor(Math.random() * maxX);
+    const newY = Math.floor(Math.random() * maxY);
 
-            while (isOverlapping && safety < 50) {
-                newX = Math.floor(Math.random() * maxX);
-                newY = Math.floor(Math.random() * maxY);
-                const centerX = containerRect.width / 2;
-                const centerY = containerRect.height / 2;
-                const btnCenterX = newX + btnRect.width / 2;
-                const btnCenterY = newY + btnRect.height / 2;
-
-                if (Math.abs(btnCenterX - centerX) < 90 && Math.abs(btnCenterY - centerY) < 40) {
-                    isOverlapping = true;
-                } else {
-                    isOverlapping = false;
-                }
-                safety++;
-            }
-
-            normalBtn.style.left = newX + 'px';
-            normalBtn.style.top = newY + 'px';
-            normalBtn.classList.add('s3_glitch'); 
-            const texts = ["ERROR", "不可選", "NOPE", "Forbidden"];
-            normalBtn.innerText = texts[Math.floor(Math.random() * texts.length)];
-
-            setTimeout(() => {
-                normalBtn.classList.remove('s3_glitch');
-            }, 500);
-        }
-
+    // 5. 套用新座標
+    normalBtn.style.left = newX + 'px';
+    normalBtn.style.top = newY + 'px';
+    
+    // 6. 故障特效 (維持原本邏輯)
+    normalBtn.classList.add('s3_glitch'); 
+    const texts = ["ERROR", "不可選", "NOPE", "Forbidden", "404", "再見"];
+    normalBtn.innerText = texts[Math.floor(Math.random() * texts.length)];
+    
+    setTimeout(() => {
+        normalBtn.classList.remove('s3_glitch');
+    }, 500);
+}
         // 成功的函式 (S3_SUCCESS) 保持原本的，不用動
 
  // 4. 屈服後的浮誇慶祝 -> 修改為「特效轉場」
@@ -718,6 +719,7 @@
     </script>
 </body>
 </html>
+
 
 
 
