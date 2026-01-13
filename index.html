@@ -203,6 +203,23 @@
             100% { transform: translate(1px, -2px) rotate(-1deg); }
         }
         /* =========================================
+           補回遺失的代碼：藍屏畫面 (預設隱藏)
+           ========================================= */
+        #s3-bsod {
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100vw; height: 100vh;
+            background: #0000aa; color: #fff; 
+            font-family: 'Consolas', monospace;
+            display: none; /* 👈 關鍵：預設要隱藏！ */
+            flex-direction: column; 
+            justify-content: center;
+            align-items: center; 
+            padding: 50px; 
+            z-index: 9999; 
+            text-align: left;
+        }
+        /* =========================================
            SCENE 4 STYLE: 照片回憶流
            ========================================= */
         .s4_container { width: 90%; max-width: 500px; text-align: center; z-index: 10; }
@@ -672,6 +689,7 @@
     </script>
 </body>
 </html>
+
 
 
 
