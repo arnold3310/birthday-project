@@ -519,6 +519,7 @@
 
  // 4. 屈服後的浮誇慶祝 -> 修改為「特效轉場」
 // 3. 屈服後的浮誇慶祝 -> 修改為「特效轉場」
+ // 3. 屈服後的浮誇慶祝 -> 修改為「特效轉場」
         function s3_success() {
             // 停止煙火
             if (typeof fireworks !== 'undefined') fireworks.stop();
@@ -552,34 +553,14 @@
                 }
 
                 // 切換音樂
-               // =========================================
-        // 修改後的音樂切換 (防止檔案缺失導致當機)
-        // =========================================
-        function switchMusic(id) {
-            // 暫停所有正在播放的音樂
-            const allAudios = document.querySelectorAll('audio');
-            allAudios.forEach(a => {
-                a.pause();
-                a.currentTime = 0;
-            });
+                switchMusic('bgm-memory');
 
-            // 尋找目標音樂標籤
-            const target = document.getElementById(id);
-            
-            // 檢查目標是否存在且有正確路徑
-            if (target && target.src && !target.src.includes('undefined')) {
-                // 使用 play() 的回傳值 (Promise) 來捕捉錯誤
-                const playPromise = target.play();
-                
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        // 這裡會捕捉到 404 錯誤，但不會讓程式崩潰
-                        console.warn(`音樂 [${id}] 讀取失敗或不存在，已自動跳過。`);
-                    });
+                // 4. 移除遮罩
+                if (overlay) {
+                    overlay.style.opacity = 0;
+                    setTimeout(() => { overlay.style.display = 'none'; }, 1000);
                 }
-            } else {
-                console.warn(`找不到音樂標籤或 src 為空: ${id}`);
-            }
+            }, 5000); // 這裡是你要求的 5 秒
         }
         // =========================================
         // SCENE 4 LOGIC: 照片流
@@ -632,6 +613,7 @@
     </script>
 </body>
 </html>
+
 
 
 
