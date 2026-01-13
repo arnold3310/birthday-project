@@ -517,76 +517,67 @@
         // SCENE 3 LOGIC: 誠實測試
         // =========================================
 // =========================================
-// =========================================
-        // SCENE 3 LOGIC: 兩階段式互動 (當機 -> 閃避)
+        // SCENE 3 LOGIC: 最終優化版 (全卡片跑動)
         // =========================================
         
-        let s3_hardMode = false; // 預設：還沒當機過，所以不會跑
+        let s3_hardMode = false;
         const normalBtn = document.getElementById('s3-normal-btn');
-        const btnContainer = document.querySelector('.s3_btn_container');
+        const cardArea = document.getElementById('s3-card'); // 改抓整張卡片
 
-        // 1. 監聽滑鼠靠近 (Mouse Over)
-        // 只有在 s3_hardMode = true (重啟後) 才會觸發跑走
+        // 1. 滑鼠靠近監聽
         normalBtn.addEventListener('mouseover', () => {
-            if (!s3_hardMode) return; // 💡 如果還沒當機過，就什麼都不做(乖乖站好)
+            if (!s3_hardMode) return; // 沒重啟過，乖乖站好
 
-            // --- 以下是原本的閃避邏輯 ---
+            // 加上 absolute 讓它脫離排版，開始自由飛翔
+            normalBtn.style.position = 'absolute'; 
+            
+            // 延遲一點點再跑
             setTimeout(() => {
                 moveButton();
             }, 100); 
         });
 
-        // 2. 點擊「普通」按鈕的行為
-        function s3_crash() {
-            // 不管怎樣，點了就當機
-            document.getElementById('s3-bsod').style.display = 'flex';
-        }
+        // 2. 點擊監聽 (取代原本 HTML 的 onclick)
+        normalBtn.addEventListener('click', () => {
+             // 不管怎樣，點了就當機
+             document.getElementById('s3-bsod').style.display = 'flex';
+        });
 
-        // 3. 藍屏上的「重新啟動」按鈕
+        // 3. 藍屏重啟
         function s3_reboot() {
-            // 隱藏藍屏
             document.getElementById('s3-bsod').style.display = 'none';
             
-            // 歸位按鈕
-            normalBtn.style.left = '10px';
-            normalBtn.style.top = '10px';
+            // 歸位 (變回相對定位，回到隊伍裡)
+            normalBtn.style.position = 'relative'; 
+            normalBtn.style.left = 'auto';
+            normalBtn.style.top = 'auto';
             
-            // 💡 關鍵：開啟「困難模式」開關
             s3_hardMode = true; 
-            
-            // 更改文字提示使用者變了
             normalBtn.innerText = "普通(?!)";
             alert("系統重啟完成。已啟用「審美強制校正」模組。");
         }
 
-        // 移動按鈕的函式 (保持不變)
+        // 4. 移動邏輯 (範圍擴大到整張卡片)
         function moveButton() {
-            const containerRect = btnContainer.getBoundingClientRect();
+            // 取得「整張卡片」的尺寸
+            const containerRect = cardArea.getBoundingClientRect();
             const btnRect = normalBtn.getBoundingClientRect();
-            const maxX = containerRect.width - btnRect.width;
-            const maxY = containerRect.height - btnRect.height;
+
+            // 為了不蓋住標題，我們把 Y 軸的起始點設在卡片高度的 30% 之後
+            const minY = containerRect.height * 0.3; 
+            const maxX = containerRect.width - btnRect.width - 20; // 減20保留邊距
+            const maxY = containerRect.height - btnRect.height - 20;
+
             let newX, newY;
-            let isOverlapping = true;
-            let safety = 0;
-
-            while (isOverlapping && safety < 50) {
-                newX = Math.floor(Math.random() * maxX);
-                newY = Math.floor(Math.random() * maxY);
-                const centerX = containerRect.width / 2;
-                const centerY = containerRect.height / 2;
-                const btnCenterX = newX + btnRect.width / 2;
-                const btnCenterY = newY + btnRect.height / 2;
-
-                if (Math.abs(btnCenterX - centerX) < 90 && Math.abs(btnCenterY - centerY) < 40) {
-                    isOverlapping = true;
-                } else {
-                    isOverlapping = false;
-                }
-                safety++;
-            }
+            
+            // 簡單隨機位置 (加上 min Y 限制，不讓它跑去遮標題)
+            newX = Math.floor(Math.random() * maxX);
+            newY = Math.floor(Math.random() * (maxY - minY) + minY);
 
             normalBtn.style.left = newX + 'px';
             normalBtn.style.top = newY + 'px';
+
+            // 故障特效
             normalBtn.classList.add('s3_glitch'); 
             const texts = ["ERROR", "不可選", "NOPE", "Forbidden"];
             normalBtn.innerText = texts[Math.floor(Math.random() * texts.length)];
@@ -596,9 +587,7 @@
             }, 500);
         }
 
-        // 成功的函式 (S3_SUCCESS) 保持原本的，不用動
-
- // 4. 屈服後的浮誇慶祝 -> 修改為「特效轉場」
+        // 成功的函式 (S3_SUCCESS) 保持不變
 // 3. 屈服後的浮誇慶祝 -> 修改為「特效轉場」
  // 3. 屈服後的浮誇慶祝 -> 修改為「特效轉場」
 // =========================================
@@ -694,6 +683,7 @@
     </script>
 </body>
 </html>
+
 
 
 
