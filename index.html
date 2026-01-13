@@ -238,14 +238,8 @@
         // =========================================
         
         // 頁面啟動時的打字特效
-       // =========================================
-        // SCENE 1 LOGIC: 終端機 (全中文版)
-        // =========================================
-        
-        // 1. 開場自動打字 (中文)
         window.onload = function() {
-            // 這裡修改開場的系統文字
-            const msg = `> 系統偵測啟動...\n> 玩家 ID: [${CONFIG.targetName}]\n> 發現生日數據流，正在解析...\n> 請求存取權限..._`;
+            const msg = `> SYSTEM DETECTED...\n> PLAYER ID: [${CONFIG.targetName}]\n> BIRTHDAY DATA STREAM FOUND.\n> REQUESTING ACCESS PERMISSION..._`;
             const el = document.getElementById('s1-msg');
             let i = 0;
             function type() { 
@@ -257,60 +251,22 @@
             type();
         };
 
-        // 2. 登入檢查 (中文錯誤訊息)
         function s1_login() {
             const inputVal = document.getElementById('s1-input').value;
             if(inputVal === CONFIG.password) {
+                // 1. 播放登入音效 (Ding!)
                 document.getElementById('sfx-login').play().catch(()=>{});
+                
+                // 2. 隱藏輸入區，顯示進度條
                 document.getElementById('s1-input-area').style.display = 'none';
                 document.getElementById('s1-loading').style.display = 'block';
+                
+                // 3. 開始跑進度條
                 s1_startLoading();
             } else {
-                // 這裡修改錯誤訊息
-                alert("拒絕存取：密碼錯誤 (提示：生日)");
+                alert("ACCESS DENIED: 密碼錯誤");
                 document.getElementById('s1-input').value = "";
             }
-        }
-
-        // 3. 進度條跑動 (中文系統紀錄)
-        function s1_startLoading() {
-            let percent = 0;
-            const bar = document.getElementById('s1-bar-fill');
-            const percentText = document.getElementById('s1-percent');
-            const logText = document.getElementById('s1-log');
-            
-            // 這裡修改跑條時跳出的系統訊息
-            const logs = [
-                "正在初始化核心模組...",
-                "同步生日回憶數據...",
-                "載入遊戲資源包...",
-                "正在繞過安全防火牆...",
-                "連線至 [楊雅羽] 專屬伺服器...",
-                "環境建置完成..."
-            ];
-
-            const timer = setInterval(() => {
-                percent += Math.floor(Math.random() * 3) + 1;
-                if (percent >= 100) {
-                    percent = 100;
-                    clearInterval(timer);
-                    
-                    // 這裡修改跑完後的文字
-                    document.getElementById('s1-loading-msg').innerText = "準備進入遊戲...";
-                    setTimeout(() => {
-                        const vid = document.getElementById('bg-video'); vid.play(); vid.style.opacity = 1;
-                        switchMusic('bgm-login');
-                        gotoScene(2);
-                    }, 1000);
-                }
-                
-                bar.style.width = percent + "%";
-                percentText.innerText = percent;
-                
-                if (percent % 15 === 0) {
-                    logText.innerText = "> " + logs[Math.floor(Math.random() * logs.length)];
-                }
-            }, 50);
         }
 
         function s1_startLoading() {
@@ -354,7 +310,6 @@
                 }
             }, 50); // 控制跑條的速度
         }
-
         // =========================================
         // SCENE 2 LOGIC: 走位按鈕
         // =========================================
@@ -434,5 +389,6 @@
     </script>
 </body>
 </html>
+
 
 
