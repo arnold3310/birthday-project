@@ -21,7 +21,27 @@
         
         /* 背景煙火與影片 */
         #fireworks-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }.fireworks-top { z-index: 999 !important; }
+        <div id="scene-transition-overlay">
+        <div class="portal-loader"></div>
+        <div class="transition-text">> 正在導向回憶數據庫...</div>
+    </div>
         #bg-video { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; filter: brightness(0.4); opacity: 0; transition: opacity 2s ease-in; }
+
+        /* =========================================
+           新增：轉場特效樣式 (Portal Transition)
+           ========================================= */
+        #scene-transition-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #000; z-index: 10000;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 1s ease;
+        }
+        .portal-loader {
+            width: 50px; height: 50px; border: 3px solid #0f0; border-top: 3px solid transparent;
+            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .transition-text { color: #0f0; font-family: monospace; letter-spacing: 2px; font-size: 1.2rem; }
 
         /* =========================================
            SCENE 1 STYLE: 終端機登入
@@ -497,43 +517,33 @@
             document.getElementById('s3-normal-btn').style.transform = `translate(0,0)`;
         }
 
-        // 4. 屈服後的浮誇慶祝
-// 4. 屈服後的浮誇慶祝
+ // 4. 屈服後的浮誇慶祝 -> 修改為「特效轉場」
         function s3_success() {
-            const canvas = document.getElementById('fireworks-canvas');
-            
-            // 1. 提升煙火層級，讓它噴在卡片前面
-            canvas.classList.add('fireworks-top');
+            // 先停止可能還在跑的煙火 (預防萬一)
+            fireworks.stop();
 
-            // 2. 設定金色煙火參數
-            fireworks.updateOptions({
-                intensity: 60,
-                particles: 150,
-                explosion: 12,
-                hue: { min: 35, max: 50 }, // 金色區間
-                brightness: { min: 50, max: 80 },
-                friction: 0.94,
-                gravity: 1.5
-            });
-
-            // 3. 啟動煙火
-            fireworks.start();
-
-            // 4. 彈出讚美視窗
+            // 1. 跳出彈窗
+            // 注意：alert 是同步的，點擊「確定」後才會執行後面的程式碼
             alert("✅ 系統診斷：您的審美能力超越了全球 99.9% 的人類！\n誠實是一種美德，而你完美擁有它。");
 
-            // 5. 慶祝 3 秒後進入下一步
+            // 2. 啟動轉場特效
+            const overlay = document.getElementById('scene-transition-overlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => { overlay.style.opacity = 1; }, 10); // 微延遲觸發淡入
+
+            // 3. 轉場中：5 秒後切換場景
             setTimeout(() => {
-                fireworks.stop();
-                // 恢復煙火層級
-                canvas.classList.remove('fireworks-top');
-                // 恢復原本的煙火設定 (預防下一幕煙火也是金色的)
-                fireworks.updateOptions(CONFIG.fireworksConfig);
-                
-                // 進入第四幕 (照片回憶)
-                s4_load(0);
+                // 執行切換場景
                 gotoScene(4);
-            }, 4000); // 稍微延長慶祝時間
+                s4_load(0); // 初始化照片
+
+                // 4. 結束轉場：淡出遮罩
+                overlay.style.opacity = 0;
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                }, 1000); // 等淡出動畫完再隱藏
+                
+            }, 5000); // 這裡設定為 5 秒
         }
         // =========================================
         // SCENE 4 LOGIC: 照片流
@@ -586,6 +596,7 @@
     </script>
 </body>
 </html>
+
 
 
 
