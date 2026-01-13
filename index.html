@@ -20,7 +20,7 @@
         .scene-container.active { display: flex; }
         
         /* 背景煙火與影片 */
-        #fireworks-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        #fireworks-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }.fireworks-top { z-index: 999 !important; }
         #bg-video { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; filter: brightness(0.4); opacity: 0; transition: opacity 2s ease-in; }
 
         /* =========================================
@@ -498,21 +498,43 @@
         }
 
         // 4. 屈服後的浮誇慶祝
+// 4. 屈服後的浮誇慶祝
         function s3_success() {
-            alert("✅ 系統診斷：您的審美能力超越了全球 99.9% 的人類！");
+            const canvas = document.getElementById('fireworks-canvas');
             
-            // 這裡可以觸發一些全螢幕金色碎紙效果 (利用原本的煙火稍微修改顏色即可)
-            fireworks.setOptions({ hue: { min: 40, max: 60 } }); // 設定為金色系
+            // 1. 提升煙火層級，讓它噴在卡片前面
+            canvas.classList.add('fireworks-top');
+
+            // 2. 設定金色煙火參數
+            fireworks.updateOptions({
+                intensity: 60,
+                particles: 150,
+                explosion: 12,
+                hue: { min: 35, max: 50 }, // 金色區間
+                brightness: { min: 50, max: 80 },
+                friction: 0.94,
+                gravity: 1.5
+            });
+
+            // 3. 啟動煙火
             fireworks.start();
-            
+
+            // 4. 彈出讚美視窗
+            alert("✅ 系統診斷：您的審美能力超越了全球 99.9% 的人類！\n誠實是一種美德，而你完美擁有它。");
+
+            // 5. 慶祝 3 秒後進入下一步
             setTimeout(() => {
                 fireworks.stop();
-                // 進入第四幕 (照片)
+                // 恢復煙火層級
+                canvas.classList.remove('fireworks-top');
+                // 恢復原本的煙火設定 (預防下一幕煙火也是金色的)
+                fireworks.updateOptions(CONFIG.fireworksConfig);
+                
+                // 進入第四幕 (照片回憶)
                 s4_load(0);
                 gotoScene(4);
-            }, 3000);
+            }, 4000); // 稍微延長慶祝時間
         }
-
         // =========================================
         // SCENE 4 LOGIC: 照片流
         // =========================================
@@ -564,6 +586,7 @@
     </script>
 </body>
 </html>
+
 
 
 
