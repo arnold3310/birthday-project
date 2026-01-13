@@ -153,6 +153,19 @@
             z-index: 10; width: 350px; position: relative;
         }
         .s3_card h2 { text-shadow: 0 0 10px #ff4d6d; letter-spacing: 2px; }
+        /* 新增這個樣式：預設隱藏警語 */
+#s3-warning {
+    display: none; /* 👈 關鍵：一開始不顯示 */
+    
+    /* 增加一點警示風格 */
+    margin-top: 20px;
+    color: #ff4d6d;
+    font-size: 0.9rem;
+    background: rgba(255, 0, 60, 0.1);
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ff4d6d;
+}
 
         /* 按鈕容器：設為 relative 讓普通按鈕可以在裡面跑 */
 /* --- CSS 修改開始 --- */
@@ -608,6 +621,7 @@ function s3_reboot() {
     // 開啟困難模式
     s3_hardMode = true;
     normalBtn.innerText = "普通(?!)";
+    document.getElementById('s3-warning').style.display = 'block';
     alert("系統重啟完成。已啟用「審美強制校正」模組。");
 }
 
@@ -734,6 +748,7 @@ function moveButton() {
     </script>
 </body>
 </html>
+
 
 
 
