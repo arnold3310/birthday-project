@@ -155,50 +155,68 @@
         .s3_card h2 { text-shadow: 0 0 10px #ff4d6d; letter-spacing: 2px; }
 
         /* 按鈕容器：設為 relative 讓普通按鈕可以在裡面跑 */
-        .s3_btn_container { 
-            position: relative; 
-            height: 150px; /* 增加高度，讓按鈕有更多空間躲藏 */
-            width: 100%;
-            margin-top: 20px;
-            overflow: hidden; 
-            border: 1px dashed rgba(255,255,255,0.1);
-            border-radius: 10px;
-        }
-        
-        /* 正確選項 (帥氣霓虹) */
-        .s3_btn_cool { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            padding: 12px 30px; background: transparent; color: #00f0ff; 
-            border: 2px solid #00f0ff; border-radius: 5px; 
-            font-size: 1.1rem; font-weight: bold; cursor: pointer; z-index: 20;
-            box-shadow: 0 0 15px #00f0ff; transition: 0.3s;
-        }
-        .s3_btn_cool:hover { background: #00f0ff; color: #000; box-shadow: 0 0 30px #00f0ff; }
-        
-        /* 惡搞選項 (故障風格) */
-        /* 惡搞選項 (故障風格) - 已修正大小與邊框 */
-        .s3_btn_normal { 
-        position: absolute;
-        /* 修改這裡：數值改成跟 Cool 按鈕一樣 */
-        padding: 12px 30px;       /* 原本是 10px 20px */
-        font-size: 1.1rem;        /* 原本是 0.9rem */
-        font-weight: bold;        /* 補上粗體，跟 Cool 按鈕一致 */
-        border: 2px solid #555;   /* 邊框加粗為 2px */
+/* --- CSS 修改開始 --- */
+
+/* 1. 容器改成 Flexbox，讓按鈕自動排排站，不要疊在一起 */
+.s3_btn_container { 
+    position: relative;
+    height: 100px; /* 稍微縮小高度，因為不需要它來定位了 */
+    width: 100%;
+    margin-top: 20px;
+    /* 這裡是用 Flexbox 自動置中 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px; /* 兩個按鈕之間的距離 */
+}
+
+/* 2. 左邊的正確按鈕：拿掉 absolute，讓它乖乖待在 Flex 佈局裡 */
+.s3_btn_cool { 
+    position: relative; /* 改回 relative */
+    /* 拿掉 top, left, transform */
+    padding: 12px 30px; 
+    background: transparent; 
+    color: #00f0ff; 
+    border: 2px solid #00f0ff; 
+    border-radius: 5px;
+    font-size: 1.1rem; 
+    font-weight: bold; 
+    cursor: pointer; 
+    z-index: 20;
+    box-shadow: 0 0 15px #00f0ff; 
+    transition: 0.3s;
+}
+
+/* 3. 右邊的普通按鈕：初始狀態也乖乖排好 */
+.s3_btn_normal { 
+    position: relative; /* 初始狀態：乖乖排隊 */
+    padding: 12px 30px; 
+    font-size: 1.1rem;
+    font-weight: bold;
+    border: 2px solid #555;
+    background: #333; 
+    color: #888; 
+    border-radius: 5px; 
+    cursor: pointer; 
+    z-index: 10001; /* 確保飛出去時在最上層 */
     
-        background: #333; 
-        color: #888; 
-        border-radius: 5px; 
-        cursor: pointer; 
-        transition: all 0.1s;     /* 快速反應 */
-        z-index: 10001;           /* 💡改大一點，確保跑出框框後不會被其他圖層蓋住 */
-        }
-        }
-        /* 觸發故障時的樣子 */
-        .s3_glitch {
-            background: #ff003c !important; color: #fff !important; border-color: #ff003c !important;
-            animation: shake 0.2s infinite;
-            box-shadow: 0 0 15px #ff003c;
-        }
+    /* ⚠️ 關鍵：加上這行會讓移動變平滑，但會影響震動，下面會修正 */
+    transition: all 0.1s ease-out; 
+}
+
+/* 4. 故障特效：強制覆蓋顏色並取消平滑過渡 */
+.s3_glitch {
+    background: #ff003c !important;
+    color: #fff !important;
+    border-color: #ff003c !important;
+    box-shadow: 0 0 20px #ff003c !important;
+    
+    /* ⚠️ 修復震動消失的關鍵：故障時不要有過渡動畫，要瞬間變色！ */
+    transition: none !important; 
+    animation: shake 0.2s infinite linear;
+}
+
+/* --- CSS 修改結束 --- */
         @keyframes shake {
             0% { transform: translate(1px, 1px) rotate(0deg); }
             10% { transform: translate(-1px, -2px) rotate(-1deg); }
@@ -577,44 +595,41 @@
         }
 
         // 3. 藍屏上的「重新啟動」按鈕
-        function s3_reboot() {
-            // 隱藏藍屏
-            document.getElementById('s3-bsod').style.display = 'none';
-            
-            // 歸位按鈕
-            normalBtn.style.position = 'fixed'; // 確保它是 fixed
-            normalBtn.style.left = '50%';
-            normalBtn.style.top = '60%';
-            normalBtn.style.transform = 'translate(-50%, -50%)'; // 讓它置中
+// 1. 重啟函式：讓按鈕乖乖歸隊
+function s3_reboot() {
+    document.getElementById('s3-bsod').style.display = 'none';
 
+    // [修改] 清除所有定位設定，讓它自動回到 Flexbox 的位置
+    normalBtn.style.position = ''; 
+    normalBtn.style.left = '';
+    normalBtn.style.top = '';
+    normalBtn.style.transform = ''; 
+    
+    // 開啟困難模式
     s3_hardMode = true;
     normalBtn.innerText = "普通(?!)";
-        }
+    alert("系統重啟完成。已啟用「審美強制校正」模組。");
+}
 
-        // 移動按鈕的函式 (保持不變)
-// 移動按鈕的函式 (全螢幕版)
+// 2. 移動函式：變身成全螢幕飛行的按鈕
 function moveButton() {
-    // 1. 強制改成 fixed 定位，這樣才能飛出原本的框框
+    // [關鍵] 一旦開始跑，立刻改成 fixed (脫離原本的排版)
     normalBtn.style.position = 'fixed';
     
-    // 2. 取得按鈕目前的尺寸
     const btnRect = normalBtn.getBoundingClientRect();
-    
-    // 3. 計算範圍改成「整個視窗」 (扣除按鈕寬度以免跑出螢幕外)
     const maxX = window.innerWidth - btnRect.width;
     const maxY = window.innerHeight - btnRect.height;
     
-    // 4. 計算隨機座標
     const newX = Math.floor(Math.random() * maxX);
     const newY = Math.floor(Math.random() * maxY);
 
-    // 5. 套用新座標
     normalBtn.style.left = newX + 'px';
     normalBtn.style.top = newY + 'px';
     
-    // 6. 故障特效 (維持原本邏輯)
+    // 加回故障特效
     normalBtn.classList.add('s3_glitch'); 
-    const texts = ["ERROR", "不可選", "NOPE", "Forbidden", "404", "再見"];
+    
+    const texts = ["ERROR", "不可選", "NOPE", "404", "手速太慢", "太天真了"];
     normalBtn.innerText = texts[Math.floor(Math.random() * texts.length)];
     
     setTimeout(() => {
@@ -719,6 +734,7 @@ function moveButton() {
     </script>
 </body>
 </html>
+
 
 
 
