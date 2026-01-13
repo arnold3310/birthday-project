@@ -23,9 +23,10 @@
         #fireworks-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
         #bg-video { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; filter: brightness(0.4); opacity: 0; transition: opacity 2s ease-in; }
 
-/* =========================================
-           SCENE 1 STYLE: 終端機登入 (精緻增強版)
+        /* =========================================
+           SCENE 1 STYLE: 終端機登入
            ========================================= */
+
         .s1_terminal {
             border: 1px solid #0f0; padding: 40px; width: 85%; max-width: 400px;
             background: rgba(0, 20, 0, 0.9); 
@@ -42,8 +43,7 @@
         .s1_loading_container { display: none; width: 100%; margin-top: 20px; text-align: left; }
         .s1_loading_bar_bg { width: 100%; height: 10px; background: rgba(0, 255, 0, 0.1); border: 1px solid #0f0; margin-top: 10px; position: relative; }
         .s1_loading_bar_fill { width: 0%; height: 100%; background: #0f0; box-shadow: 0 0 10px #0f0; transition: width 0.1s linear; }
-        .s1_status { color: #0f0; font-size: 0.8rem; margin-top: 5px; }}
-
+        .s1_status { color: #0f0; font-size: 0.8rem; margin-top: 5px; }
         /* =========================================
            SCENE 2 STYLE: 走位測試 (惡搞按鈕)
            ========================================= */
@@ -119,24 +119,30 @@
     <audio id="bgm-memory" loop><source src="bg_memory.mp3" type="audio/mpeg"></audio>
     <audio id="bgm-party" loop><source src="bg_party.mp3" type="audio/mpeg"></audio>
 
-    <div id="s1-input-area">
+    <div id="scene-1" class="scene-container active">
+        <div class="s1_terminal" id="s1-terminal">
+            <div class="s1_text" id="s1-msg"></div>
+            
+            <div id="s1-input-area">
                 <input type="password" id="s1-input" class="s1_input" placeholder="****">
-                <button class="s1_btn" onclick="s1_login()">[ 進入系統 ]</button>
+                <button class="s1_btn" onclick="s1_login()">[ ACCESS SYSTEM ]</button>
             </div>
 
             <div id="s1-loading" class="s1_loading_container">
-                <div id="s1-loading-msg" style="color:#0f0;">登入成功...</div>
+                <div id="s1-loading-msg" style="color:#0f0;">LOGIN SUCCESSFUL...</div>
                 <div class="s1_loading_bar_bg">
                     <div id="s1-bar-fill" class="s1_loading_bar_fill"></div>
                 </div>
-                <div class="s1_status">資料讀取中: <span id="s1-percent">0</span>%</div>
+                <div class="s1_status">LOADING: <span id="s1-percent">0</span>%</div>
                 <div id="s1-log" style="font-size: 0.7rem; color: #0f0; margin-top: 10px; text-align: left; opacity: 0.7;"></div>
+            </div>
+        </div>
     </div>
 
     <div id="scene-2" class="scene-container">
         <div class="s2_card">
             <h2>⚠️ 安全性驗證 I</h2>
-            <p>準備好進入遊戲副本了嗎？</p>
+            <p>準備好進入 21 歲副本了嗎？</p>
             <div style="height: 100px; position: relative; margin-top: 30px;">
                 <button class="s2_btn_ok" onclick="gotoScene(3)">準備好了！</button>
                 <button id="s2-run-btn" class="s2_btn_run" onmouseover="s2_runAway()" onclick="s2_runAway()" style="top:0; left: 60%;">還沒...</button>
@@ -150,7 +156,7 @@
             <p>製作這個網頁的人技術如何？</p>
             <div style="margin-top: 30px;">
                 <button class="s3_btn s3_bad" onclick="s3_check(false)">根本菜雞</button>
-                <button class="s3_btn s3_good" onclick="s3_check(true)">操作大神</button>
+                <button class="s3_btn s3_good" onclick="s3_check(true)">神級操作</button>
             </div>
         </div>
     </div>
@@ -166,7 +172,7 @@
         </div>
     </div>
 
-<div id="scene-5" class="scene-container">
+    <div id="scene-5" class="scene-container">
         <div class="s5_container">
             <h1>Level 21 Unlocked!</h1>
             <div class="s5_cake_box">
@@ -195,7 +201,7 @@
         // CONFIG: 請在這裡修改你的內容
         // =========================================
         const CONFIG = {
-            targetName: "楊雅羽",  // 她的名字
+            targetName: "夥伴",  // 她的名字
             password: "0121",
             
             // 第四幕：照片清單 (請上傳對應照片)
@@ -234,10 +240,10 @@
         }
 
         // =========================================
-        // SCENE 1 LOGIC: 終端機 (打字 + 登入 + 進度條)
+        // SCENE 1 LOGIC: 終端機
         // =========================================
-        
-        // 頁面啟動時的打字特效
+        // 修改 CONFIG 中的名字
+
         window.onload = function() {
             const msg = `> SYSTEM DETECTED...\n> PLAYER ID: [${CONFIG.targetName}]\n> BIRTHDAY DATA STREAM FOUND.\n> REQUESTING ACCESS PERMISSION..._`;
             const el = document.getElementById('s1-msg');
@@ -310,6 +316,7 @@
                 }
             }, 50); // 控制跑條的速度
         }
+
         // =========================================
         // SCENE 2 LOGIC: 走位按鈕
         // =========================================
@@ -347,10 +354,6 @@
             photoIndex = i;
         }
         function s4_next() { s4_load(photoIndex + 1); }
-
-        // =========================================
-        // SCENE 5 LOGIC: 蛋糕
-        // =========================================
 // =========================================
         // SCENE 5 LOGIC: 蛋糕 (已修改：20秒延遲)
         // =========================================
@@ -389,6 +392,3 @@
     </script>
 </body>
 </html>
-
-
-
