@@ -85,7 +85,7 @@
             padding: 12px 20px; background: #ff003c; 
             color: #fff; border: none; 
             border-radius: 5px; cursor: pointer; font-size: 1rem; 
-            font-weight: bold; position: fixed; /* 改成 fixed 讓它能跑出框框 */
+            font-weight: bold; position: relative; 
             transition: 0.1s ease-out; /* 快速移動 */
             z-index: 100; /* 確保在最上層 */
         }
@@ -362,6 +362,8 @@
         function s2_runAway() {
             const btn = document.getElementById('s2-run-btn');
             
+            btn.style.position = 'fixed';
+            
             // 嘲諷語錄
             const mocks = ["太慢了！", "抓不到~", "瞬移！", "Lag了嗎？", "嘿嘿~", "點不到XP"];
             const randomText = mocks[Math.floor(Math.random() * mocks.length)];
@@ -450,6 +452,7 @@
     </script>
 </body>
 </html>
+
 
 
 
