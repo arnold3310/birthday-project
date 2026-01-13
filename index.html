@@ -514,38 +514,33 @@
         }
 
 
-        // =========================================
-        // SCENE 3 LOGIC: 兩階段式互動 (當機 -> 閃避)
-        // =========================================
-        
 // =========================================
-        // SCENE 3 LOGIC: 最終優化版 (全卡片跑動)
+        // SCENE 3 LOGIC: 最終完整版 (對稱 -> 當機 -> 全卡片跑動)
         // =========================================
         
         let s3_hardMode = false;
         const normalBtn = document.getElementById('s3-normal-btn');
-        const cardArea = document.getElementById('s3-card'); // 改抓整張卡片
+        const cardArea = document.getElementById('s3-card'); // 抓整張卡片範圍
 
-        // 1. 滑鼠靠近監聽
+        // 1. 滑鼠靠近監聽 (只有重啟後才會觸發跑動)
         normalBtn.addEventListener('mouseover', () => {
             if (!s3_hardMode) return; // 沒重啟過，乖乖站好
 
             // 加上 absolute 讓它脫離排版，開始自由飛翔
             normalBtn.style.position = 'absolute'; 
             
-            // 延遲一點點再跑
+            // 延遲 0.1 秒再跑，增加緊張感
             setTimeout(() => {
                 moveButton();
             }, 100); 
         });
 
-        // 2. 點擊監聽 (取代原本 HTML 的 onclick)
+        // 2. 點擊監聽 (不管有沒有重啟，點到就是當機)
         normalBtn.addEventListener('click', () => {
-             // 不管怎樣，點了就當機
              document.getElementById('s3-bsod').style.display = 'flex';
         });
 
-        // 3. 藍屏重啟
+        // 3. 藍屏重啟按鈕功能
         function s3_reboot() {
             document.getElementById('s3-bsod').style.display = 'none';
             
@@ -554,6 +549,7 @@
             normalBtn.style.left = 'auto';
             normalBtn.style.top = 'auto';
             
+            // 開啟困難模式
             s3_hardMode = true; 
             normalBtn.innerText = "普通(?!)";
             alert("系統重啟完成。已啟用「審美強制校正」模組。");
@@ -572,10 +568,11 @@
 
             let newX, newY;
             
-            // 簡單隨機位置 (加上 min Y 限制，不讓它跑去遮標題)
+            // 隨機計算新位置
             newX = Math.floor(Math.random() * maxX);
             newY = Math.floor(Math.random() * (maxY - minY) + minY);
 
+            // 設定位置
             normalBtn.style.left = newX + 'px';
             normalBtn.style.top = newY + 'px';
 
@@ -584,81 +581,36 @@
             const texts = ["ERROR", "不可選", "NOPE", "Forbidden"];
             normalBtn.innerText = texts[Math.floor(Math.random() * texts.length)];
 
+            // 0.5秒後停止抖動
             setTimeout(() => {
                 normalBtn.classList.remove('s3_glitch');
             }, 500);
         }
 
-        // 移動按鈕的函式 (保持不變)
-        function moveButton() {
-            const containerRect = btnContainer.getBoundingClientRect();
-            const btnRect = normalBtn.getBoundingClientRect();
-            const maxX = containerRect.width - btnRect.width;
-            const maxY = containerRect.height - btnRect.height;
-            let newX, newY;
-            let isOverlapping = true;
-            let safety = 0;
+        // 5. 成功後的轉場 (保留你原本的轉場邏輯)
+        function s3_success() {
+            alert("✅ 系統診斷：您的審美能力超越了全球 99.9% 的人類！\n誠實是一種美德，而你完美擁有它。");
 
-            while (isOverlapping && safety < 50) {
-                newX = Math.floor(Math.random() * maxX);
-                newY = Math.floor(Math.random() * maxY);
-                const centerX = containerRect.width / 2;
-                const centerY = containerRect.height / 2;
-                const btnCenterX = newX + btnRect.width / 2;
-                const btnCenterY = newY + btnRect.height / 2;
-
-                if (Math.abs(btnCenterX - centerX) < 90 && Math.abs(btnCenterY - centerY) < 40) {
-                    isOverlapping = true;
-                } else {
-                    isOverlapping = false;
-                }
-                safety++;
+            // 顯示轉場黑幕
+            const overlay = document.getElementById('scene-transition-overlay');
+            if(overlay) {
+                overlay.style.display = 'flex';
+                setTimeout(() => { overlay.style.opacity = 1; }, 50);
             }
 
-            normalBtn.style.left = newX + 'px';
-            normalBtn.style.top = newY + 'px';
-            normalBtn.classList.add('s3_glitch'); 
-            const texts = ["ERROR", "不可選", "NOPE", "Forbidden"];
-            normalBtn.innerText = texts[Math.floor(Math.random() * texts.length)];
+            // 嘗試播音樂
+            switchMusic('bgm-memory');
 
+            // 5秒後強制跳轉
             setTimeout(() => {
-                normalBtn.classList.remove('s3_glitch');
-            }, 500);
+                gotoScene(4);
+                if(typeof s4_load === 'function') s4_load(0);
+                if(overlay) {
+                    overlay.style.opacity = 0;
+                    setTimeout(() => { overlay.style.display = 'none'; }, 1000);
+                }
+            }, 5000);
         }
-
-        // 成功的函式 (S3_SUCCESS) 保持原本的，不用動
-        // 4. 移動邏輯 (範圍擴大到整張卡片)
-        function moveButton() {
-            // 取得「整張卡片」的尺寸
-            const containerRect = cardArea.getBoundingClientRect();
-            const btnRect = normalBtn.getBoundingClientRect();
-
-            // 為了不蓋住標題，我們把 Y 軸的起始點設在卡片高度的 30% 之後
-            const minY = containerRect.height * 0.3; 
-            const maxX = containerRect.width - btnRect.width - 20; // 減20保留邊距
-            const maxY = containerRect.height - btnRect.height - 20;
-
-            let newX, newY;
-            
-            // 簡單隨機位置 (加上 min Y 限制，不讓它跑去遮標題)
-            newX = Math.floor(Math.random() * maxX);
-            newY = Math.floor(Math.random() * (maxY - minY) + minY);
-
-            normalBtn.style.left = newX + 'px';
-            normalBtn.style.top = newY + 'px';
-
-            // 故障特效
-            normalBtn.classList.add('s3_glitch'); 
-            const texts = ["ERROR", "不可選", "NOPE", "Forbidden"];
-            normalBtn.innerText = texts[Math.floor(Math.random() * texts.length)];
-
-            setTimeout(() => {
-                normalBtn.classList.remove('s3_glitch');
-            }, 500);
-        }
-
-        // 成功的函式 (S3_SUCCESS) 保持不變
-// 3. 屈服後的浮誇慶祝 -> 修改為「特效轉場」
  // 3. 屈服後的浮誇慶祝 -> 修改為「特效轉場」
 // =========================================
         // SCENE 3: 修正後的轉場邏輯 (無視 404 錯誤)
@@ -753,6 +705,7 @@
     </script>
 </body>
 </html>
+
 
 
 
