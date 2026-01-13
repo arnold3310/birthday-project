@@ -91,10 +91,40 @@
         }
            SCENE 3 STYLE: 真心話測試
            ========================================= */
-        .s3_card { background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; backdrop-filter: blur(10px); text-align: center; border: 1px solid rgba(255,255,255,0.2); z-index: 10; width: 300px; }
-        .s3_btn { padding: 10px 20px; margin: 10px; border-radius: 10px; border: none; cursor: pointer; font-size: 1rem; transition: 0.3s; }
-        .s3_bad { background: #444; color: #fff; }
-        .s3_good { background: #ff4d6d; color: #fff; }
+/* =========================================
+           SCENE 3 STYLE: 誠實豆沙包 (進化版)
+           ========================================= */
+        .s3_card { 
+            background: rgba(255, 255, 255, 0.1); 
+            padding: 40px; border-radius: 20px; 
+            backdrop-filter: blur(10px); text-align: center; 
+            border: 1px solid rgba(255, 255, 255, 0.2); 
+            z-index: 10; width: 350px;
+            transition: filter 0.3s ease; /* 為了視力模糊效果 */
+        }
+        
+        /* 藍屏畫面 (預設隱藏) */
+        #s3-bsod {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #0000aa; color: #fff; font-family: 'Consolas', monospace;
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; padding: 50px; z-index: 9999; text-align: left;
+        }
+
+        .s3_btn_container { display: flex; justify-content: center; gap: 20px; margin-top: 30px; position: relative; height: 100px; }
+        
+        /* 超級帥按鈕 */
+        .s3_btn_cool { padding: 12px 25px; background: #ff4d6d; color: #fff; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; z-index: 11; }
+        
+        /* 普通按鈕 (磁鐵效應) */
+        .s3_btn_normal { 
+            padding: 12px 25px; background: #555; color: #ccc; border: none; 
+            border-radius: 50px; cursor: pointer; position: absolute; 
+            transition: transform 0.1s ease-out; /* 平滑移動 */
+        }
+
+        /* 警告文字提示 */
+        #s3-warning { color: #ffeb3b; font-size: 0.8rem; margin-top: 15px; display: none; font-weight: bold; }
 
         /* =========================================
            SCENE 4 STYLE: 照片回憶流
@@ -194,17 +224,34 @@
         </div>
     </div>
 
-    <div id="scene-3" class="scene-container">
-        <div class="s3_card">
-            <h2>⚠️ 安全性驗證 II</h2>
-            <p>製作這個網頁的人技術如何？</p>
-            <div style="margin-top: 30px;">
-                <button class="s3_btn s3_bad" onclick="s3_check(false)">根本菜雞</button>
-                <button class="s3_btn s3_good" onclick="s3_check(true)">神級操作</button>
+<div id="scene-3" class="scene-container">
+        <div class="s3_card" id="s3-card">
+            <h2 style="color: #ff4d6d;">⚠️ 終極審美驗證</h2>
+            <p>在進入資料庫前，系統需要校準您的審美觀：<br><strong>「您覺得開發此網頁的人如何？」</strong></p>
+            
+            <div class="s3_btn_container" id="s3-area">
+                <button class="s3_btn_cool" onclick="s3_success()">超級帥 / 用心！</button>
+                <button id="s3-normal-btn" class="s3_btn_normal" onclick="s3_crash()">普通而已</button>
             </div>
+            
+            <div id="s3-warning">⚠️ 偵測到視網膜異常風險，已過濾低美感選項。</div>
         </div>
     </div>
 
+    <div id="s3-bsod">
+        <div style="font-size: 5rem; margin-bottom: 20px;">:(</div>
+        <div style="font-size: 1.5rem; width: 80%;">
+            您的電腦遇到問題，需要重新啟動。我們只會收集某些錯誤資訊，然後為您重新啟動。<br><br>
+            <span style="font-size: 1rem; opacity: 0.8;">
+                100% 完成<br><br>
+                如果您想了解更多資訊，稍後可以在線上搜尋此錯誤: <br>
+                <strong>CRITICAL_PROCESS_DIED: TRUTH_NOT_FOUND</strong><br><br>
+                系統偵測到「普通」邏輯矛盾，請點擊【超級帥】重啟系統。
+            </span>
+        </div>
+        <button class="s1_btn" style="width: 200px; margin-top: 50px;" onclick="s3_reboot()">[ 重新啟動 ]</button>
+    </div>
+    
     <div id="scene-4" class="scene-container">
         <div class="s4_container">
             <h3 id="s4-counter">Loading Memories...</h3>
@@ -365,7 +412,7 @@
             btn.style.position = 'fixed';
             
             // 嘲諷語錄
-            const mocks = ["太慢了！", "抓不到~", "瞬移！", "Lag了嗎？", "嘿嘿~", "點不到XP"];
+            const mocks = ["太慢了！", "抓不到~", "瞬移！", "累了嗎？", "嘿嘿~", "點不到XP"];
             const randomText = mocks[Math.floor(Math.random() * mocks.length)];
             
             // 計算隨機位置 (限制在視窗內，避免跑出螢幕)
@@ -391,14 +438,80 @@
         // =========================================
         // SCENE 3 LOGIC: 誠實測試
         // =========================================
-        function s3_check(isGood) {
-            if(isGood) {
-                alert("驗證通過！進入回憶資料庫...");
-                s4_load(0); // 預先載入第一張照片
-                gotoScene(4);
+// =========================================
+        // SCENE 3 LOGIC: 磁鐵效應 + 視力模糊 + 藍屏
+        // =========================================
+        
+        let s3_btnX = 0;
+        let s3_btnY = 0;
+
+        // 監聽滑鼠移動
+        document.addEventListener('mousemove', (e) => {
+            const scene3 = document.getElementById('scene-3');
+            if (!scene3.classList.contains('active')) return;
+
+            const btn = document.getElementById('s3-normal-btn');
+            const card = document.getElementById('s3-card');
+            const warning = document.getElementById('s3-warning');
+            
+            const btnRect = btn.getBoundingClientRect();
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+
+            // 計算按鈕中心
+            const btnCenterX = btnRect.left + btnRect.width / 2;
+            const btnCenterY = btnRect.top + btnRect.height / 2;
+
+            // 計算距離
+            const distance = Math.sqrt(Math.pow(mouseX - btnCenterX, 2) + Math.pow(mouseY - btnCenterY, 2));
+
+            // 1. 磁鐵效應 (當滑鼠靠近 100 像素內時推開)
+            if (distance < 120) {
+                const angle = Math.atan2(btnCenterY - mouseY, btnCenterX - mouseX);
+                const force = (120 - distance) / 2; // 距離越近推力越大
+                
+                s3_btnX += Math.cos(angle) * force;
+                s3_btnY += Math.sin(angle) * force;
+                
+                btn.style.transform = `translate(${s3_btnX}px, ${s3_btnY}px)`;
+
+                // 2. 視力模糊化 (視覺瓦斯燈)
+                const blurVal = (120 - distance) / 10;
+                card.style.filter = `blur(${blurVal}px) grayscale(${blurVal/5})`;
+                warning.style.display = 'block';
             } else {
-                alert("⚠️ 系統錯誤！請摸著良心重選！");
+                // 距離遠了就恢復
+                card.style.filter = `blur(0px) grayscale(0)`;
+                warning.style.display = 'none';
             }
+        });
+
+        // 3. 虛假錯誤 (BSOD)
+        function s3_crash() {
+            document.getElementById('s3-bsod').style.display = 'flex';
+        }
+
+        function s3_reboot() {
+            document.getElementById('s3-bsod').style.display = 'none';
+            // 恢復按鈕位置
+            s3_btnX = 0; s3_btnY = 0;
+            document.getElementById('s3-normal-btn').style.transform = `translate(0,0)`;
+        }
+
+        // 4. 屈服後的浮誇慶祝
+        function s3_success() {
+            alert("✅ 系統診斷：您的審美能力超越了全球 99.9% 的人類！");
+            
+            // 這裡可以觸發一些全螢幕金色碎紙效果 (利用原本的煙火稍微修改顏色即可)
+            fireworks.setOptions({ hue: { min: 40, max: 60 } }); // 設定為金色系
+            fireworks.start();
+            
+            setTimeout(() => {
+                fireworks.stop();
+                // 進入第四幕 (照片)
+                s4_load(0);
+                gotoScene(4);
+            }, 3000);
         }
 
         // =========================================
@@ -452,6 +565,7 @@
     </script>
 </body>
 </html>
+
 
 
 
