@@ -141,83 +141,68 @@
             z-index: 100; /* 確保在最上層 */
         }
 
-/* =========================================
-           SCENE 3 STYLE: 故障防護版
+        /* =========================================
+           SCENE 3 STYLE: 故障防護版 (對齊修正)
            ========================================= */
         .s3_card { 
-            background: rgba(10, 10, 10, 0.95); /* 深色背景 */
+            background: rgba(10, 10, 10, 0.95); 
             padding: 40px; border-radius: 10px; 
             text-align: center; 
             border: 1px solid #333;
             box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
-            z-index: 10; width: 350px; position: relative;
+            z-index: 10; width: 400px; /* 稍微加寬一點 */
+            position: relative;
+            min-height: 250px; /* 固定高度，避免按鈕亂跑時卡片忽大忽小 */
         }
         .s3_card h2 { text-shadow: 0 0 10px #ff4d6d; letter-spacing: 2px; }
 
-        /* 按鈕容器：設為 relative 讓普通按鈕可以在裡面跑 */
+        /* 按鈕容器：讓按鈕一開始對齊 */
         .s3_btn_container { 
-            position: relative; 
-            height: 150px; /* 增加高度，讓按鈕有更多空間躲藏 */
-            width: 100%;
-            margin-top: 20px;
-            overflow: hidden; 
-            border: 1px dashed rgba(255,255,255,0.1);
-            border-radius: 10px;
+            display: flex; 
+            justify-content: center; 
+            gap: 30px; /* 按鈕間距 */
+            margin-top: 40px;
+            /* 移除了 border 和 overflow，讓它看起來不被受限 */
         }
         
+        /* 通用按鈕樣式 (確保大小一致) */
+        .s3_btn_base {
+            width: 140px; /* 固定寬度 */
+            padding: 12px 0;
+            font-size: 1rem; 
+            font-weight: bold; 
+            border-radius: 50px; 
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
         /* 正確選項 (帥氣霓虹) */
         .s3_btn_cool { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            padding: 12px 30px; background: transparent; color: #00f0ff; 
-            border: 2px solid #00f0ff; border-radius: 5px; 
-            font-size: 1.1rem; font-weight: bold; cursor: pointer; z-index: 20;
-            box-shadow: 0 0 15px #00f0ff; transition: 0.3s;
+            background: transparent; color: #00f0ff; 
+            border: 2px solid #00f0ff; 
+            box-shadow: 0 0 15px #00f0ff; 
+            z-index: 20; /* 永遠在最上層 */
         }
         .s3_btn_cool:hover { background: #00f0ff; color: #000; box-shadow: 0 0 30px #00f0ff; }
         
-        /* 惡搞選項 (故障風格) */
+        /* 惡搞選項 (一開始是靜態，跑起來變絕對定位) */
         .s3_btn_normal { 
-            position: absolute; padding: 10px 20px; 
             background: #333; color: #888; border: 1px solid #555; 
-            border-radius: 5px; cursor: pointer; font-size: 0.9rem;
-            transition: all 0.1s; /* 快速反應 */
             z-index: 10;
         }
+
         /* 觸發故障時的樣子 */
         .s3_glitch {
+            position: absolute; /* 變成絕對定位才能亂跑 */
             background: #ff003c !important; color: #fff !important; border-color: #ff003c !important;
             animation: shake 0.2s infinite;
             box-shadow: 0 0 15px #ff003c;
         }
         @keyframes shake {
             0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
             50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
             100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
-        /* =========================================
-           補回遺失的代碼：藍屏畫面 (預設隱藏)
-           ========================================= */
-        #s3-bsod {
-            position: fixed; 
-            top: 0; left: 0; 
-            width: 100vw; height: 100vh;
-            background: #0000aa; color: #fff; 
-            font-family: 'Consolas', monospace;
-            display: none; /* 👈 關鍵：預設要隱藏！ */
-            flex-direction: column; 
-            justify-content: center;
-            align-items: center; 
-            padding: 50px; 
-            z-index: 9999; 
-            text-align: left;
         }
         /* =========================================
            SCENE 4 STYLE: 照片回憶流
@@ -326,19 +311,10 @@
         </div>
     </div>
 
-<div id="scene-3" class="scene-container">
-        <div class="s3_card" id="s3-card">
-            <h2 style="color: #ff4d6d;">⚠️ 終極審美驗證</h2>
-            <p>在進入資料庫前，系統需要校準您的審美觀：<br><strong>「您覺得開發此網頁的人如何？」</strong></p>
-            
-            <div class="s3_btn_container" id="s3-area">
-                <button class="s3_btn_cool" onclick="s3_success()">超級帥 / 用心！</button>
-                <button id="s3-normal-btn" class="s3_btn_normal" onclick="s3_crash()">普通而已</button>
+<div class="s3_btn_container" id="s3-area">
+                <button class="s3_btn_base s3_btn_cool" onclick="s3_success()">超級帥 / 用心！</button>
+                <button id="s3-normal-btn" class="s3_btn_base s3_btn_normal">普通而已</button>
             </div>
-            
-            <div id="s3-warning">⚠️ 偵測到視網膜異常風險，已過濾低美感選項。</div>
-        </div>
-    </div>
 
     <div id="s3-bsod">
         <div style="font-size: 5rem; margin-bottom: 20px;">:(</div>
@@ -718,6 +694,7 @@
     </script>
 </body>
 </html>
+
 
 
 
