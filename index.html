@@ -24,22 +24,55 @@
 
         #bg-video { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; filter: brightness(0.4); opacity: 0; transition: opacity 2s ease-in; }
 
-        /* =========================================
-           新增：轉場特效樣式 (Portal Transition)
+/* =========================================
+           升級版：量子核心轉場特效
            ========================================= */
-     
         #scene-transition-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: #000; z-index: 10000;
             display: none; flex-direction: column; justify-content: center; align-items: center;
-            opacity: 0; transition: opacity 1s ease;
+            opacity: 0; transition: opacity 0.8s ease;
         }
-        .portal-loader {
-            width: 50px; height: 50px; border: 3px solid #0f0; border-top: 3px solid transparent;
-            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;
+
+        /* 核心容器 */
+        .loader-box { position: relative; width: 150px; height: 150px; display: flex; justify-content: center; align-items: center; }
+
+        /* 三層旋轉光環 */
+        .ring { position: absolute; border-radius: 50%; border: 3px solid transparent; }
+        
+        /* 外圈 (綠色) */
+        .ring-1 { 
+            width: 100%; height: 100%; 
+            border-top: 4px solid #0f0; border-left: 4px solid #0f0;
+            box-shadow: 0 0 20px #0f0; 
+            animation: spinA 1.5s linear infinite; 
         }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        .transition-text { color: #0f0; font-family: monospace; letter-spacing: 2px; font-size: 1.2rem; }
+        /* 中圈 (藍色) */
+        .ring-2 { 
+            width: 70%; height: 70%; 
+            border-right: 4px solid #00f0ff; border-bottom: 4px solid #00f0ff;
+            box-shadow: 0 0 20px #00f0ff; 
+            animation: spinB 1.2s linear infinite; 
+        }
+        /* 內圈 (粉紅) */
+        .ring-3 { 
+            width: 40%; height: 40%; 
+            border-top: 4px solid #ff00ff; 
+            box-shadow: 0 0 15px #ff00ff; 
+            animation: spinA 0.8s linear infinite; 
+        }
+
+        /* 文字特效 (呼吸+故障感) */
+        .transition-text { 
+            margin-top: 40px; color: #fff; font-family: monospace; 
+            font-size: 1.5rem; letter-spacing: 3px; font-weight: bold;
+            text-shadow: 2px 0 #ff00ff, -2px 0 #00f0ff; /* 抖音故障風陰影 */
+            animation: pulseText 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes spinA { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spinB { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } } /* 反向轉 */
+        @keyframes pulseText { 0% { opacity: 0.7; letter-spacing: 3px; } 100% { opacity: 1; letter-spacing: 6px; } }}
 
         /* =========================================
            SCENE 1 STYLE: 終端機登入
@@ -194,10 +227,14 @@
     </style>
 </head>
 <body>
-
+     
     <div id="scene-transition-overlay">
-    <div class="portal-loader"></div>
-    <div class="transition-text">> 正在導向回憶數據庫...</div>
+        <div class="loader-box">
+            <div class="ring ring-1"></div>
+            <div class="ring ring-2"></div>
+            <div class="ring ring-3"></div>
+        </div>
+        <div class="transition-text">DATA UPLOADING...</div>
     </div>
 
     <div id="fireworks-canvas"></div>
@@ -616,6 +653,7 @@
     </script>
 </body>
 </html>
+
 
 
 
