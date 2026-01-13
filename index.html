@@ -5,44 +5,78 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Happy 21st Birthday!</title>
     <script src="https://cdn.jsdelivr.net/npm/fireworks-js@2.10.7/dist/index.umd.js"></script>
+    
     <style>
-        :root { --accent: #ff4d6d; --cream: #fff5e1; --cake-base: #f5c096; --plate: #f0f0f0; --envelope-col: #ff758c; }
+        /* ==================== 樣式區 (CSS) ==================== */
+        :root { 
+            --accent: #ff4d6d;        
+            --cream: #fff5e1;         
+            --cake-base: #f5c096;     
+            --plate: #f0f0f0;         
+            --envelope: #ff758c;      
+        }
         body {
             margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh;
-            font-family: 'Microsoft JhengHei', sans-serif; color: #fff; overflow: hidden; background: #000;
+            font-family: 'Noto Serif TC', 'Microsoft JhengHei', serif; /* 換個字體更有質感 */
+            color: #fff; overflow: hidden; background: #000;
         }
 
-        /* 背景影片 (預設隱藏，解鎖後浮現) */
+        /* 背景影片 */
         #bg-video {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             object-fit: cover; z-index: -1;
             filter: brightness(0.4); opacity: 0; transition: opacity 2.5s ease-in;
         }
-
         .fireworks-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999; pointer-events: none; }
-        
-        /* 通用卡片樣式 (每一幕都用這個) */
+
+        /* 磨砂玻璃卡片 (Glassmorphism) */
         .card {
-            text-align: center; background: rgba(20, 30, 50, 0.75); padding: 40px; border-radius: 20px;
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5); width: 85%; max-width: 450px; position: relative;
-            border: 1px solid rgba(255, 255, 255, 0.2); z-index: 10; 
+            text-align: center; 
+            background: rgba(255, 255, 255, 0.1); /* 更通透的白 */
+            padding: 40px; 
+            border-radius: 20px;
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); /* 強力模糊 */
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3); 
+            width: 85%; max-width: 420px; 
+            border: 1px solid rgba(255, 255, 255, 0.2); 
+            z-index: 10; 
             transition: all 0.5s ease;
+            position: absolute; /* 讓場景重疊，方便切換 */
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
         }
         
-        .hidden { display: none; } /* 用來隱藏還沒輪到的場景 */
-        
-        /* 輸入框與按鈕 */
-        input { padding: 12px; border-radius: 10px; border: none; width: 70%; margin-bottom: 15px; text-align: center; font-size: 1.2rem; outline: none; background: rgba(255,255,255,0.9); color: #333; }
-        .btn { padding: 12px 25px; border-radius: 50px; border: none; background: var(--accent); color: white; cursor: pointer; font-size: 1rem; transition: 0.3s; margin: 10px 5px; font-weight: bold; }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 77, 109, 0.5); }
-        
-        /* 打字機文字區 */
-        .typing-area { font-size: 1.2rem; line-height: 1.8; margin-bottom: 20px; text-align: left; min-height: 100px; }
+        .hidden { 
+            opacity: 0; 
+            pointer-events: none; 
+            transform: translate(-50%, -40%) scale(0.95); /* 隱藏時稍微往上浮並縮小 */
+        } 
 
-        /* ====================
-           🍰 蛋糕樣式
-           ==================== */
+        /* 元件樣式 */
+        h2 { font-weight: 500; letter-spacing: 2px; margin-bottom: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        p { font-size: 1.1rem; line-height: 1.6; color: #eee; }
+        
+        input { 
+            padding: 12px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.3); 
+            width: 70%; margin-bottom: 20px; text-align: center; font-size: 1.2rem; outline: none; 
+            background: rgba(0,0,0,0.3); color: #fff; transition: 0.3s;
+        }
+        input:focus { background: rgba(0,0,0,0.5); border-color: var(--accent); }
+
+        .btn { 
+            padding: 12px 30px; border-radius: 50px; border: none; 
+            background: linear-gradient(135deg, var(--accent), #ff758c); 
+            color: white; cursor: pointer; font-size: 1rem; transition: 0.3s; margin: 10px; font-weight: bold; 
+            box-shadow: 0 4px 15px rgba(255, 77, 109, 0.4);
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 77, 109, 0.6); }
+        .btn-secondary { background: rgba(255,255,255,0.2); box-shadow: none; } /* 次要按鈕 */
+
+        /* 惡搞按鈕專用 */
+        #btn-no { position: relative; transition: all 0.2s ease; }
+
+        .typing-area { font-size: 1.15rem; line-height: 1.8; margin-bottom: 30px; text-align: left; min-height: 120px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+
+        /* 蛋糕與動畫 (保持不變) */
         .cake-stage { position: relative; height: 220px; width: 250px; margin: 0 auto 20px auto; }
         .cake-part { position: absolute; opacity: 0; left: 50%; transform: translateX(-50%); }
         #plate { bottom: 0; width: 240px; height: 15px; background: var(--plate); border-radius: 50%; box-shadow: 0 5px 10px rgba(0,0,0,0.3); }
@@ -54,51 +88,14 @@
         #candle { bottom: 140px; width: 12px; height: 40px; background: repeating-linear-gradient(45deg, #fff, #fff 4px, #74c0fc 4px, #74c0fc 8px); z-index: 1; border-radius: 2px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
         #flame { width: 14px; height: 24px; background: #ffcc00; border-radius: 50% 50% 20% 20%; position: absolute; top: -25px; left: 50%; transform: translateX(-50%); box-shadow: 0 0 15px #ff6600, 0 0 30px #ffcc00; animation: flicker 0.4s infinite alternate; display: none; }
 
-        /* ====================
-           💌 信封與信紙樣式 (壓軸驚喜)
-           ==================== */
-        .envelope-container { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
-            width: 300px; height: 200px; z-index: 100; cursor: pointer; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .envelope-body {
-            position: absolute; bottom: 0; width: 100%; height: 100%;
-            background: var(--envelope-col); border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            z-index: 2; overflow: hidden;
-        }
-        /* 信封開口 (三角形) */
-        .envelope-flap {
-            position: absolute; top: 0; left: 0; width: 0; height: 0;
-            border-left: 150px solid transparent; border-right: 150px solid transparent;
-            border-top: 110px solid #ff8fa3; /* 稍微深一點的粉色 */
-            transform-origin: top; transition: transform 0.6s ease; z-index: 4;
-        }
-        /* 信封下方的遮擋三角形 */
-        .envelope-pocket {
-            position: absolute; bottom: 0; left: 0; width: 0; height: 0;
-            border-left: 150px solid var(--envelope-col); border-right: 150px solid var(--envelope-col);
-            border-bottom: 100px solid transparent; /* 這樣才會形成 V 字開口 */
-            border-top: 100px solid transparent;
-            z-index: 3;
-        }
-        /* 信紙 */
-        .letter {
-            position: absolute; bottom: 0; left: 20px; width: 260px; height: 250px; /* 比信封高，滑出來才好看 */
-            background: #fff; padding: 20px; box-sizing: border-box;
-            border-radius: 5px; color: #333; font-size: 1rem; line-height: 1.6; text-align: left;
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
-            transition: transform 0.8s ease; z-index: 1; transform: translateY(100px); /* 初始藏在裡面 */
-        }
+        .envelope-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); width: 300px; height: 200px; z-index: 100; cursor: pointer; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .envelope-body { position: absolute; bottom: 0; width: 100%; height: 100%; background: var(--envelope); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 2; overflow: hidden; }
+        .envelope-flap { position: absolute; top: 0; left: 0; width: 0; height: 0; border-left: 150px solid transparent; border-right: 150px solid transparent; border-top: 110px solid #ff8fa3; transform-origin: top; transition: transform 0.6s ease; z-index: 4; }
+        .envelope-pocket { position: absolute; bottom: 0; left: 0; width: 0; height: 0; border-left: 150px solid var(--envelope); border-right: 150px solid var(--envelope); border-bottom: 100px solid transparent; border-top: 100px solid transparent; z-index: 3; }
+        .letter { position: absolute; bottom: 0; left: 20px; width: 260px; height: 250px; background: #fff; padding: 20px; box-sizing: border-box; border-radius: 5px; color: #333; font-size: 1rem; line-height: 1.6; text-align: left; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); transition: transform 0.8s ease; z-index: 1; transform: translateY(100px); }
         
-        /* 信封開啟動畫狀態 */
         .envelope-container.open .envelope-flap { transform: rotateX(180deg); z-index: 1; }
-        .envelope-container.open .letter { transform: translateY(-120px); z-index: 5; } /* 信紙滑出 */
-        
-        /* 蛋糕動畫 */
-        @keyframes bounceInUp { 0% { opacity: 0; transform: translate(-50%, 100px); } 60% { opacity: 1; transform: translate(-50%, -10px); } 100% { opacity: 1; transform: translate(-50%, 0); } }
-        @keyframes dropDown { 0% { opacity: 0; transform: translate(-50%, -100px); } 60% { opacity: 1; transform: translate(-50%, 10px); } 100% { opacity: 1; transform: translate(-50%, 0); } }
-        @keyframes flicker { from { opacity: 0.85; transform: translateX(-50%) scale(0.9); } to { opacity: 1; transform: translateX(-50%) scale(1.1); } }
+        .envelope-container.open .letter { transform: translateY(-120px); z-index: 5; }
 
         .animate #plate { animation: bounceInUp 0.8s ease-out forwards; }
         .animate #cake-bottom { animation: bounceInUp 0.8s ease-out 0.3s forwards; }
@@ -106,34 +103,43 @@
         .animate #cake-top { animation: dropDown 0.8s ease-out 0.8s forwards; }
         .animate .cherry { animation: dropDown 0.6s ease-out 1.2s forwards; }
         .animate #candle { animation: dropDown 0.6s ease-out 1.4s forwards; }
+        @keyframes bounceInUp { 0% { opacity: 0; transform: translate(-50%, 100px); } 60% { opacity: 1; transform: translate(-50%, -10px); } 100% { opacity: 1; transform: translate(-50%, 0); } }
+        @keyframes dropDown { 0% { opacity: 0; transform: translate(-50%, -100px); } 60% { opacity: 1; transform: translate(-50%, 10px); } 100% { opacity: 1; transform: translate(-50%, 0); } }
+        @keyframes flicker { from { opacity: 0.85; transform: translateX(-50%) scale(0.9); } to { opacity: 1; transform: translateX(-50%) scale(1.1); } }
     </style>
 </head>
 <body>
-
     <div class="fireworks-container"></div>
     <video muted loop playsinline id="bg-video"><source src="bgvideo.mp4" type="video/mp4"></video>
     <audio id="introMusic" loop><source src="bg2song.mp3" type="audio/mpeg"></audio>
     <audio id="cakeMusic" loop><source src="bgsong.mp3" type="audio/mpeg"></audio>
 
-    <div id="scene-1" class="card">
-        <h2>🔒 身分驗證</h2>
-        <p>請輸入專屬密碼</p>
-        <input type="password" id="pw-input">
-        <br><button class="btn" onclick="checkPassword()">解鎖驚喜</button>
+    <div id="scene-login" class="card">
+        <h2>🔒 通行證驗證</h2>
+        <p>請輸入本次航班代碼</p>
+        <input type="password" id="pw-input" placeholder="0121">
+        <br><button class="btn" onclick="checkPassword()">確認登機</button>
     </div>
 
-    <div id="scene-2" class="card hidden">
+    <div id="scene-fun" class="card hidden">
+        <h2 id="fun-question">準備好接收 21 歲的祝福了嗎？</h2>
+        <div style="margin-top: 30px;">
+            <button class="btn" onclick="nextScene('scene-fun', 'scene-text'); startTyping();">準備好了！</button>
+            <button class="btn btn-secondary" id="btn-no" onmouseover="moveButton(this)" onclick="moveButton(this)">還沒...</button>
+        </div>
+    </div>
+
+    <div id="scene-text" class="card hidden">
         <h2>我想對妳說...</h2>
         <div id="typing-text" class="typing-area"></div>
-        <button id="btn-next-2" class="btn hidden" onclick="nextScene('scene-2', 'scene-cake')">下一步</button>
+        <button id="btn-next-2" class="btn hidden" onclick="nextScene('scene-text', 'scene-cake')">繼續旅程</button>
     </div>
 
     <div id="scene-cake" class="card hidden">
         <div id="pre-cake-ui">
-            <h1 style="margin-bottom: 30px;">準備好了嗎？</h1>
+            <h1 style="margin-bottom: 30px;">許個願吧！</h1>
             <button class="btn" onclick="startCakeShow()">點燃驚喜</button>
         </div>
-
         <div class="cake-stage" id="cake-stage">
             <div id="plate" class="cake-part"></div>
             <div id="cake-bottom" class="cake-part"></div>
@@ -150,89 +156,99 @@
     <div class="envelope-container" id="final-envelope" onclick="openEnvelope()">
         <div class="envelope-flap"></div>
         <div class="envelope-body"></div>
-        <div class="letter">
-            <p><strong>To 21歲的妳：</strong></p>
-            <p>生日快樂！🎉<br>
-            這封信藏在煙火之後，<br>
-            希望新的一歲，<br>
-            妳能遇見更多美好的風景。<br>
-            不管未來如何，<br>
-            我都在這裡支持妳！✨</p>
-        </div>
+        <div class="letter" id="letter-content"></div>
     </div>
 
     <script>
-        const correctPw = '0121';
-        
-        // --- 這裡修改中間想說的話 ---
-        const heartWords = "雖然我們還沒真正見過面，\n但這段時間和妳聊天真的很開心。\n在這個特別的日子，\n想用我正在學的程式，給妳一點不一樣的祝福...";
-        
-        // 設定高級煙火參數
-        const fireworks = new Fireworks.default(document.querySelector('.fireworks-container'), { 
-            intensity: 40, particles: 180, friction: 0.96, gravity: 1.2, acceleration: 1.05, 
-            explosion: 8, traceLength: 4, traceSpeed: 10, brightness: {min: 60, max: 90},
-            hue: {min: 0, max: 360}, delay: {min: 20, max: 40} // 頻率更快，顏色更亮
-        });
+        const CONFIG = {
+            password: '0121',
+            typingText: "雖然我們還沒真正見過面，\n但這段時間和妳聊天真的很開心。\n在這個特別的日子，\n想用我正在學的程式，給妳一點不一樣的祝福...",
+            letterContent: `
+                <p><strong>To 21歲的妳：</strong></p>
+                <p>生日快樂！🎉<br>
+                蛋糕許完願了嗎？<br>
+                希望新的一歲，<br>
+                妳能遇見更多美好的風景。<br>
+                不管未來如何，<br>
+                我都在這裡支持妳！✨</p>
+            `,
+            fireworksConfig: { intensity: 45, particles: 200, explosion: 10, traceLength: 5, brightness: {min: 60, max: 90}, delay: {min: 15, max: 30} }
+        };
 
-        // 檢查密碼
+        const fireworks = new Fireworks.default(document.querySelector('.fireworks-container'), CONFIG.fireworksConfig);
+        document.getElementById('letter-content').innerHTML = CONFIG.letterContent;
+
+        // 1. 檢查密碼 -> 進入惡搞環節
         function checkPassword() {
-            if (document.getElementById('pw-input').value === correctPw) {
+            if (document.getElementById('pw-input').value === CONFIG.password) {
                 const video = document.getElementById('bg-video'); video.play(); video.style.opacity = 1;
                 document.getElementById('introMusic').play().catch(() => {});
                 
-                // 進入下一幕
-                nextScene('scene-1', 'scene-2');
-                startTyping(); // 開始打字
-            } else { alert("密碼錯誤喔！"); }
+                // --- 改成進入惡搞場景 ---
+                nextScene('scene-login', 'scene-fun');
+            } else { alert("通行證無效！(密碼錯誤)"); }
         }
 
-        // 場景切換通用函式
+        // 2. 惡搞按鈕移動邏輯
+        function moveButton(btn) {
+            // 隨機產生一個新位置 (範圍限制在卡片內比較好，或者螢幕內)
+            // 這裡設定讓它在螢幕範圍內亂跑
+            const x = Math.random() * (window.innerWidth - 100);
+            const y = Math.random() * (window.innerHeight - 50);
+            
+            // 將按鈕改為絕對定位，才能自由移動
+            btn.style.position = 'fixed';
+            btn.style.left = x + 'px';
+            btn.style.top = y + 'px';
+            
+            // 更改文字嘲諷一下
+            const mocks = ["抓不到~", "太慢了！", "點旁邊那個啦", "嘿嘿~"];
+            btn.innerText = mocks[Math.floor(Math.random() * mocks.length)];
+        }
+
+        // 3. 場景切換器
         function nextScene(currentId, nextId) {
-            document.getElementById(currentId).classList.add('hidden');
-            document.getElementById(nextId).classList.remove('hidden');
+            // 讓舊場景隱藏
+            const current = document.getElementById(currentId);
+            current.classList.add('hidden');
+            
+            // 讓新場景出現
+            const next = document.getElementById(nextId);
+            next.classList.remove('hidden');
         }
 
-        // 打字機效果
+        // 4. 打字機
         function startTyping(){
             const area = document.getElementById('typing-text'); let i=0;
+            const text = CONFIG.typingText;
             function type(){
-                if(i<heartWords.length){ area.innerHTML+=heartWords.charAt(i)==='\n'?'<br>':heartWords.charAt(i); i++; setTimeout(type, 100); }
-                else{ document.getElementById('btn-next-2').classList.remove('hidden'); }
+                if(i < text.length){ area.innerHTML += text.charAt(i) === '\n' ? '<br>' : text.charAt(i); i++; setTimeout(type, 100); } 
+                else { document.getElementById('btn-next-2').classList.remove('hidden'); }
             } type();
         }
 
-        // 蛋糕秀 + 煙火
+        // 5. 蛋糕秀
         function startCakeShow() {
-            // 切換音樂
             const intro = document.getElementById('introMusic'); intro.pause(); intro.currentTime = 0;
             document.getElementById('cakeMusic').play();
 
-            // 隱藏按鈕，讓背景變透明
             document.getElementById('pre-cake-ui').style.display = 'none';
             const card = document.querySelector('#scene-cake');
             card.style.background = 'transparent'; card.style.boxShadow = 'none'; card.style.border = 'none'; card.style.backdropFilter = 'none';
 
-            // 蛋糕動畫
             document.getElementById('cake-stage').classList.add('animate');
             
-            // 點火 + 煙火 + 信封出現
             setTimeout(() => {
                 document.getElementById('flame').style.display = 'block';
-                fireworks.start(); // 啟動高級煙火
-                
-                // 3秒後，信封飛入
+                fireworks.start(); 
                 setTimeout(() => {
                     const env = document.getElementById('final-envelope');
-                    env.style.transform = "translate(-50%, -50%) scale(1)"; // 變大出現
+                    env.style.transform = "translate(-50%, -50%) scale(1)";
                 }, 3000);
-                
             }, 2000);
         }
 
-        // 打開信封
-        function openEnvelope() {
-            document.getElementById('final-envelope').classList.add('open');
-        }
+        function openEnvelope() { document.getElementById('final-envelope').classList.add('open'); }
     </script>
 </body>
 </html>
