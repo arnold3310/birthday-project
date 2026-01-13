@@ -541,90 +541,86 @@
         // SCENE 3 LOGIC: 誠實測試
         // =========================================
 // =========================================
-        // SCENE 3 LOGIC: 故障防護 (範圍內瞬移)
+// =========================================
+        // SCENE 3 LOGIC: 兩階段式互動 (當機 -> 閃避)
         // =========================================
         
-        // 這裡不需要 mousemove 監聽了，改用 mouseover
-        // 請確保你的 HTML 裡的按鈕有 id="s3-normal-btn"
-
-       // =========================================
-        // SCENE 3 LOGIC: 智慧閃避版 (防重疊 + 微延遲)
-        // =========================================
-        
+        let s3_hardMode = false; // 預設：還沒當機過，所以不會跑
         const normalBtn = document.getElementById('s3-normal-btn');
         const btnContainer = document.querySelector('.s3_btn_container');
 
-        // 當滑鼠碰到普通按鈕
+        // 1. 監聽滑鼠靠近 (Mouse Over)
+        // 只有在 s3_hardMode = true (重啟後) 才會觸發跑走
         normalBtn.addEventListener('mouseover', () => {
-            
-            // 1. 設定 100 毫秒的延遲，讓使用者感覺到「快要按到了！」
+            if (!s3_hardMode) return; // 💡 如果還沒當機過，就什麼都不做(乖乖站好)
+
+            // --- 以下是原本的閃避邏輯 ---
             setTimeout(() => {
                 moveButton();
             }, 100); 
         });
 
+        // 2. 點擊「普通」按鈕的行為
+        function s3_crash() {
+            // 不管怎樣，點了就當機
+            document.getElementById('s3-bsod').style.display = 'flex';
+        }
+
+        // 3. 藍屏上的「重新啟動」按鈕
+        function s3_reboot() {
+            // 隱藏藍屏
+            document.getElementById('s3-bsod').style.display = 'none';
+            
+            // 歸位按鈕
+            normalBtn.style.left = '10px';
+            normalBtn.style.top = '10px';
+            
+            // 💡 關鍵：開啟「困難模式」開關
+            s3_hardMode = true; 
+            
+            // 更改文字提示使用者變了
+            normalBtn.innerText = "普通(?!)";
+            alert("系統重啟完成。已啟用「審美強制校正」模組。");
+        }
+
+        // 移動按鈕的函式 (保持不變)
         function moveButton() {
-            // 取得容器尺寸
             const containerRect = btnContainer.getBoundingClientRect();
             const btnRect = normalBtn.getBoundingClientRect();
-
-            // 計算最大移動範圍
             const maxX = containerRect.width - btnRect.width;
             const maxY = containerRect.height - btnRect.height;
-
             let newX, newY;
             let isOverlapping = true;
             let safety = 0;
 
-            // 2. 防重疊迴圈：如果隨機出的位置在中間，就重算，直到算出在邊邊的位置
             while (isOverlapping && safety < 50) {
                 newX = Math.floor(Math.random() * maxX);
                 newY = Math.floor(Math.random() * maxY);
-
-                // 定義中間「超級帥」按鈕的禁區 (假設在容器正中央，保留 80px 的安全半徑)
                 const centerX = containerRect.width / 2;
                 const centerY = containerRect.height / 2;
-                
-                // 計算新位置的中心點
                 const btnCenterX = newX + btnRect.width / 2;
                 const btnCenterY = newY + btnRect.height / 2;
 
-                // 檢查是否太靠近中間 (X軸距離 < 90 且 Y軸距離 < 40 視為重疊)
                 if (Math.abs(btnCenterX - centerX) < 90 && Math.abs(btnCenterY - centerY) < 40) {
-                    isOverlapping = true; // 太近了，重算
+                    isOverlapping = true;
                 } else {
-                    isOverlapping = false; // 位置安全
+                    isOverlapping = false;
                 }
                 safety++;
             }
 
-            // 3. 設定新位置
             normalBtn.style.left = newX + 'px';
             normalBtn.style.top = newY + 'px';
-
-            // 4. 故障特效
             normalBtn.classList.add('s3_glitch'); 
-            const texts = ["ERROR", "不可選", "404", "NOPE", "Forbidden"];
+            const texts = ["ERROR", "不可選", "NOPE", "Forbidden"];
             normalBtn.innerText = texts[Math.floor(Math.random() * texts.length)];
 
-            // 0.5秒後停止抖動
             setTimeout(() => {
                 normalBtn.classList.remove('s3_glitch');
             }, 500);
         }
 
-        // 藍屏功能 (如果你手速夠快點到的話)
-        function s3_crash() { document.getElementById('s3-bsod').style.display = 'flex'; }
-        
-        function s3_reboot() {
-            document.getElementById('s3-bsod').style.display = 'none';
-            // 歸位
-            normalBtn.style.left = '10px';
-            normalBtn.style.top = '10px';
-            normalBtn.innerText = "普通而已";
-        }
-
-        // ... (原本的 s3_success 函式請保留，那是好的) ...
+        // 成功的函式 (S3_SUCCESS) 保持原本的，不用動
 
  // 4. 屈服後的浮誇慶祝 -> 修改為「特效轉場」
 // 3. 屈服後的浮誇慶祝 -> 修改為「特效轉場」
@@ -722,6 +718,7 @@
     </script>
 </body>
 </html>
+
 
 
 
