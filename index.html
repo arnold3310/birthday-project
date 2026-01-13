@@ -44,14 +44,51 @@
         .s1_loading_bar_bg { width: 100%; height: 10px; background: rgba(0, 255, 0, 0.1); border: 1px solid #0f0; margin-top: 10px; position: relative; }
         .s1_loading_bar_fill { width: 0%; height: 100%; background: #0f0; box-shadow: 0 0 10px #0f0; transition: width 0.1s linear; }
         .s1_status { color: #0f0; font-size: 0.8rem; margin-top: 5px; }
-        /* =========================================
-           SCENE 2 STYLE: 走位測試 (惡搞按鈕)
-           ========================================= */
-        .s2_card { background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; backdrop-filter: blur(10px); text-align: center; border: 1px solid rgba(255,255,255,0.2); z-index: 10; width: 300px; }
-        .s2_btn_ok { padding: 10px 30px; background: #ff4d6d; color: white; border: none; border-radius: 50px; cursor: pointer; font-size: 1rem; }
-        .s2_btn_run { padding: 10px 30px; background: #666; color: white; border: none; border-radius: 50px; cursor: pointer; font-size: 1rem; position: absolute; transition: 0.1s; }
 
         /* =========================================
+           SCENE 2 STYLE: 走位測試 (高科技警示版)
+           ========================================= */
+        .s2_card { 
+            background: rgba(20, 20, 20, 0.9); 
+            padding: 40px; border-radius: 10px; 
+            text-align: center; 
+            border: 2px solid #ffd700; /* 警示黃邊框 */
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            z-index: 10; width: 320px;
+            position: relative;
+            overflow: hidden; /* 讓掃描線限制在框內 */
+        }
+        /* 增加掃描線動畫 */
+        .s2_card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 5px;
+            background: rgba(255, 215, 0, 0.5);
+            box-shadow: 0 0 10px #ffd700;
+            animation: scan 2s linear infinite;
+        }
+        @keyframes scan { 0% { top: 0; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+
+        .s2_title { color: #ffd700; font-size: 1.5rem; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 5px #ffd700; }
+        .s2_text { color: #fff; font-size: 1rem; margin-bottom: 30px; line-height: 1.5; }
+        
+        /* 正常按鈕 (綠色安全) */
+        .s2_btn_ok { 
+            padding: 12px 30px; background: transparent; 
+            color: #0f0; border: 2px solid #0f0; 
+            border-radius: 5px; cursor: pointer; font-size: 1.1rem; font-weight: bold;
+            text-shadow: 0 0 5px #0f0; box-shadow: 0 0 5px #0f0;
+            transition: 0.2s;
+        }
+        .s2_btn_ok:hover { background: #0f0; color: #000; box-shadow: 0 0 20px #0f0; }
+
+        /* 逃跑按鈕 (紅色危險) */
+        .s2_btn_run { 
+            padding: 12px 20px; background: #ff003c; 
+            color: #fff; border: none; 
+            border-radius: 5px; cursor: pointer; font-size: 1rem; 
+            font-weight: bold; position: fixed; /* 改成 fixed 讓它能跑出框框 */
+            transition: 0.1s ease-out; /* 快速移動 */
+            z-index: 100; /* 確保在最上層 */
+        }
            SCENE 3 STYLE: 真心話測試
            ========================================= */
         .s3_card { background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; backdrop-filter: blur(10px); text-align: center; border: 1px solid rgba(255,255,255,0.2); z-index: 10; width: 300px; }
@@ -139,13 +176,20 @@
         </div>
     </div>
 
-    <div id="scene-2" class="scene-container">
+<div id="scene-2" class="scene-container">
         <div class="s2_card">
-            <h2>⚠️ 安全性驗證 I</h2>
-            <p>準備好進入 21 歲副本了嗎？</p>
-            <div style="height: 100px; position: relative; margin-top: 30px;">
-                <button class="s2_btn_ok" onclick="gotoScene(3)">準備好了！</button>
-                <button id="s2-run-btn" class="s2_btn_run" onmouseover="s2_runAway()" onclick="s2_runAway()" style="top:0; left: 60%;">還沒...</button>
+            <h2 class="s2_title">⚠️ SYSTEM ALERT</h2>
+            <div style="width: 100%; height: 1px; background: #ffd700; margin: 10px 0; opacity: 0.5;"></div>
+            <p class="s2_text">
+                檢測到高強度壽星能量！<br>
+                進入 21 歲副本前需進行反應力測試。<br>
+                <span style="font-size: 0.9rem; opacity: 0.7;">(Reaction Test Required)</span>
+            </p>
+            
+            <div style="height: 80px; display: flex; justify-content: center; align-items: center; gap: 20px;">
+                <button class="s2_btn_ok" onclick="gotoScene(3)">[ 準備好了 ]</button>
+                
+                <button id="s2-run-btn" class="s2_btn_run" onmouseover="s2_runAway()" onclick="s2_runAway()">還沒...</button>
             </div>
         </div>
     </div>
@@ -311,15 +355,35 @@
                 }
             }, 50);
         }
+
         // =========================================
-        // SCENE 2 LOGIC: 走位按鈕
+        // SCENE 2 LOGIC: 走位按鈕 (嘲諷升級版)
         // =========================================
         function s2_runAway() {
             const btn = document.getElementById('s2-run-btn');
-            const x = Math.random() * 200 - 100;
-            const y = Math.random() * 150 - 50;
-            btn.style.transform = `translate(${x}px, ${y}px)`;
-            btn.innerText = "抓不到~";
+            
+            // 嘲諷語錄
+            const mocks = ["太慢了！", "抓不到~", "瞬移！", "Lag了嗎？", "嘿嘿~", "點不到XP"];
+            const randomText = mocks[Math.floor(Math.random() * mocks.length)];
+            
+            // 計算隨機位置 (限制在視窗內，避免跑出螢幕)
+            // window.innerWidth 減去按鈕寬度(約100)，保留邊距
+            const maxX = window.innerWidth - 120; 
+            const maxY = window.innerHeight - 60;
+            
+            const randomX = Math.floor(Math.random() * maxX);
+            const randomY = Math.floor(Math.random() * maxY);
+
+            // 設定新位置
+            btn.style.left = randomX + "px";
+            btn.style.top = randomY + "px";
+            
+            // 更新嘲諷文字
+            btn.innerText = randomText;
+            
+            // 變更顏色增加混亂感
+            const colors = ["#ff003c", "#ff8800", "#aa00ff"];
+            btn.style.background = colors[Math.floor(Math.random() * colors.length)];
         }
 
         // =========================================
@@ -386,6 +450,7 @@
     </script>
 </body>
 </html>
+
 
 
 
