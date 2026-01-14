@@ -260,19 +260,87 @@
             z-index: 9999; 
             text-align: left;
         }
-        /* =========================================
-           SCENE 4 STYLE: 照片回憶流
+
+/* =========================================
+           SCENE 4 STYLE: 星圖連線 (Constellation)
            ========================================= */
-        .s4_container { width: 90%; max-width: 500px; text-align: center; z-index: 10; }
-        .s4_photo_frame { 
-            width: 100%; height: 350px; background: #000; border: 2px solid #fff; 
-            display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 20px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        #scene-4 {
+            position: relative; /* 讓內部的 absolute 元素定位 */
+            overflow: hidden;
         }
-        .s4_img { max-width: 100%; max-height: 100%; object-fit: contain; animation: fadeIn 1s ease; }
-        .s4_caption { font-size: 1.2rem; margin-bottom: 20px; min-height: 30px; text-shadow: 1px 1px 5px #000; }
-        .s4_btn { padding: 10px 30px; background: rgba(255,255,255,0.2); border: 1px solid #fff; color: #fff; cursor: pointer; border-radius: 30px; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        /* 1. 星圖背景畫布 (畫線用的) */
+        #s4-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1; /* 在背景之上，照片之下 */
+            pointer-events: none; /* 讓滑鼠可以穿透 */
+        }
+
+        /* 2. 星星節點 (照片容器) */
+        .s4_star_node {
+            position: absolute;
+            width: 20px; height: 20px; /* 初始狀態：只是個小光點 */
+            background: #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%); /* 讓定位點在正中心 */
+            z-index: 5;
+            box-shadow: 0 0 10px #fff;
+            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            opacity: 0; /* 一開始隱藏，連到才出現 */
+        }
+
+        /* 3. 被點亮後的狀態 (顯示照片) */
+        .s4_star_node.active {
+            width: 120px; height: 120px; /* 變大 */
+            opacity: 1;
+            border: 3px solid #fff;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.8), 0 0 60px rgba(0, 240, 255, 0.6);
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* 4. 底部文字區 (固定位置) */
+        .s4_caption_box {
+            position: absolute;
+            bottom: 40px;
+            width: 80%;
+            text-align: center;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(5px);
+            opacity: 0;
+            transition: opacity 1s;
+        }
+        .s4_caption_text {
+            font-size: 1.2rem;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255,255,255,0.8);
+        }
+        
+        /* 5. 略過/完成按鈕 */
+        .s4_skip_btn {
+            position: absolute;
+            top: 20px; right: 20px;
+            padding: 8px 20px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.7);
+            border-radius: 30px;
+            cursor: pointer;
+            z-index: 20;
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+        .s4_skip_btn:hover {
+            background: rgba(255,255,255,0.3);
+            color: #fff;
+        }
 
         /* =========================================
            SCENE 5 STYLE: 蛋糕與許願
@@ -395,17 +463,17 @@
         <button class="s1_btn" style="width: 200px; margin-top: 50px;" onclick="s3_reboot()">[ 重新啟動 ]</button>
     </div>
     
-    <div id="scene-4" class="scene-container">
-        <div class="s4_container">
-            <h3 id="s4-counter">Loading Memories...</h3>
-            <div class="s4_photo_frame">
-                <img id="s4-img" class="s4_img" src="" alt="Memory">
-            </div>
-            <div id="s4-caption" class="s4_caption"></div>
-            <button class="s4_btn" onclick="s4_next()">下一張</button>
-        </div>
-    </div>
+<div id="scene-4" class="scene-container">
+        <canvas id="s4-canvas"></canvas>
+        
+        <div id="s4-stars-container"></div>
 
+        <div id="s4-caption-box" class="s4_caption_box">
+            <div id="s4-caption-text" class="s4_caption_text">Connecting memories...</div>
+        </div>
+
+        <button id="s4-action-btn" class="s4_skip_btn" onclick="s4_skipOrNext()">跳過動畫 >></button>
+    </div>
     <div id="scene-5" class="scene-container">
         <div class="s5_container">
             <h1>Level 21 Unlocked!</h1>
@@ -439,12 +507,12 @@
             password: "0121",
             
             // 第四幕：照片清單 (請上傳對應照片)
-            photos: [
-                { src: "photo1.jpg", text: "這是我們第一次組隊..." },
-                { src: "photo2.jpg", text: "那時候妳還在雷..." },
-                { src: "photo3.jpg", text: "終於贏了一場！" }
-            ],
-            
+        photos: [
+            { src: "https://placehold.co/600x400/png?text=Memory+1", text: "這是第一張回憶" },
+            { src: "https://placehold.co/600x400/png?text=Memory+2", text: "那是第二張回憶" },
+            { src: "https://placehold.co/600x400/png?text=Memory+3", text: "星星連線中..." },
+            { src: "https://placehold.co/600x400/png?text=Memory+4", text: "未完待續" }
+         ],
             // 第六幕：最後的信
             finalLetter: `
                 <h3>Happy Birthday!</h3>
@@ -464,15 +532,32 @@
             document.getElementById(`scene-${n}`).classList.add('active');
             
             // 音樂自動切換邏輯
-            if(n === 4) switchMusic('bgm-memory');
+            if(n === 4) {
+                // [新增] 進入第四幕時，初始化星圖
+                s4_init(); 
+            }
             if(n === 5) switchMusic('bgm-party');
         }
 
-        function switchMusic(id) {
-            document.querySelectorAll('audio').forEach(a => { a.pause(); a.currentTime = 0; });
-            document.getElementById(id).play().catch(()=>{});
-        }
+// 修正後的音樂切換函式 (防呆版)
+function switchMusic(id) {
+    // 1. 先把所有音樂暫停
+    document.querySelectorAll('audio').forEach(a => { 
+        a.pause(); 
+        a.currentTime = 0; 
+    });
 
+    // 2. 嘗試播放指定的音樂
+    const audioEl = document.getElementById(id);
+    if (audioEl) {
+        // 如果元素存在才播放，並捕捉錯誤 (例如 404)
+        audioEl.play().catch((e) => {
+            console.log("音樂播放失敗 (可忽略):", e);
+        });
+    } else {
+        console.warn("找不到音樂 ID:", id);
+    }
+}
         // =========================================
         // SCENE 1 LOGIC: 終端機
         // =========================================
@@ -658,58 +743,231 @@ function moveButton() {
 // =========================================
         // SCENE 3: 修正後的轉場邏輯 (無視 404 錯誤)
         // =========================================
-        function s3_success() {
-            // 1. 先跳出彈窗 (同步執行，點完確定才往下走)
-            alert("✅ 系統診斷：您的審美能力超越了全球 99.9% 的人類！\n誠實是一種美德，而你完美擁有它。");
+// SCENE 3: 修正後的轉場邏輯 (強制移除遮罩版)
+function s3_success() {
+    // 1. 彈窗
+    alert("✅ 系統診斷：您的審美能力超越了全球 99.9% 的人類！\n誠實是一種美德，而你完美擁有它。");
 
-            // 2. 立即顯示轉場動畫 (不論音樂檔在不在)
-            const overlay = document.getElementById('scene-transition-overlay');
+    // 2. 顯示轉場動畫
+    const overlay = document.getElementById('scene-transition-overlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        setTimeout(() => { overlay.style.opacity = 1; }, 50);
+    }
+
+    // 3. 嘗試播放音樂
+   // switchMusic('bgm-memory');
+
+    // 4. 倒數 5 秒後切換
+    console.log("轉場動畫開始，倒數 5 秒...");
+    
+    setTimeout(() => {
+        // [重點修改] 使用 try-catch 包住切換邏輯，確保不會因為報錯而卡住
+        try {
+            gotoScene(4); // 嘗試切換場景
+            
+            // 確保照片加載 (雖然現在用 s4_init，但保留這行沒關係)
+            if (typeof s4_load === 'function') s4_load(0);
+            
+        } catch (error) {
+            console.error("切換場景時發生錯誤:", error);
+            // 就算報錯，我們也要強制顯示第四幕，避免畫面全黑
+            document.getElementById('scene-transition-overlay').style.display = 'none';
+        } finally {
+            // [關鍵] 無論成功或失敗，這段程式碼一定會執行：把黑色遮罩關掉！
             if (overlay) {
-                overlay.style.display = 'flex';
-                // 稍微延遲讓 display: flex 生效後再改 opacity
-                setTimeout(() => { overlay.style.opacity = 1; }, 50);
+                overlay.style.opacity = 0;
+                setTimeout(() => { 
+                    overlay.style.display = 'none'; 
+                }, 1000);
             }
-
-            // 3. 嘗試播放音樂 (若失敗會被 catch，不影響後續)
-            try {
-                switchMusic('bgm-memory');
-            } catch (e) {
-                console.warn("切換音樂失敗，但流程繼續進行:", e);
-            }
-
-            // 4. 強制 5 秒後跳轉 (核心計時器)
-            console.log("轉場動畫開始，倒數 5 秒...");
-            setTimeout(() => {
-                // 執行場景切換
-                gotoScene(4);
-                
-                // 確保照片加載函式存在才執行
-                if (typeof s4_load === 'function') {
-                    s4_load(0);
-                }
-
-                // 5. 跳轉後淡出遮罩
-                if (overlay) {
-                    overlay.style.opacity = 0;
-                    setTimeout(() => { 
-                        overlay.style.display = 'none'; 
-                    }, 1000);
-                }
-            }, 5000); 
         }
+    }, 5000);
+}
         // =========================================
         // SCENE 4 LOGIC: 照片流
         // =========================================
-        let photoIndex = 0;
-        function s4_load(i) {
-            if(i >= CONFIG.photos.length) { gotoScene(5); return; }
-            const p = CONFIG.photos[i];
-            document.getElementById('s4-img').src = p.src;
-            document.getElementById('s4-caption').innerText = p.text;
-            document.getElementById('s4-counter').innerText = `Memory ${i+1}/${CONFIG.photos.length}`;
-            photoIndex = i;
+// =========================================
+        // SCENE 4 LOGIC: 星圖連線 (Constellation)
+        // =========================================
+        
+        let s4_ctx = null;
+        let s4_canvas = null;
+        let s4_isAnimating = false;
+        let s4_currentIndex = 0;
+        let s4_starPositions = []; // 儲存計算好的座標
+
+        // 1. 初始化：進入第四幕時呼叫
+        function s4_init() {
+            // 準備畫布
+            s4_canvas = document.getElementById('s4-canvas');
+            s4_ctx = s4_canvas.getContext('2d');
+            s4_resizeCanvas();
+            window.addEventListener('resize', s4_resizeCanvas);
+
+            // 清空舊星星
+            const container = document.getElementById('s4-stars-container');
+            container.innerHTML = '';
+            s4_starPositions = [];
+
+            // 🎵 切換音樂 (確保在 gotoScene 裡有呼叫)
+        //    switchMusic('bgm-memory');
+
+            // 生成座標與 DOM 元素
+            const count = CONFIG.photos.length;
+            
+            // 演算法：產生一條蜿蜒的路徑 (Zigzag Snake)
+            // 這樣可以確保照片不會重疊，且動線順暢
+            for (let i = 0; i < count; i++) {
+                // X 軸：奇數張在左，偶數張在右 (或是隨機一點的分布)
+                // 這裡用正弦波產生比較自然的S型
+                const xPercent = 50 + 35 * Math.sin(i * 1.2); 
+                const yPercent = 15 + (70 / (count - 1)) * i; // Y軸從 15% 均勻分布到 85%
+
+                // 轉換成像素
+                const x = (xPercent / 100) * window.innerWidth;
+                const y = (yPercent / 100) * window.innerHeight;
+
+                s4_starPositions.push({ x, y });
+
+                // 建立星星元素
+                const star = document.createElement('div');
+                star.className = 's4_star_node';
+                star.id = `star-${i}`;
+                star.style.left = x + 'px';
+                star.style.top = y + 'px';
+                // 預先載入背景圖，但還不顯示
+                star.style.backgroundImage = `url('${CONFIG.photos[i].src}')`;
+                
+                // 點擊可以顯示大圖 (非必要，增加互動性)
+                star.onclick = () => { if(star.classList.contains('active')) alert(CONFIG.photos[i].text); };
+
+                container.appendChild(star);
+            }
+
+            // 顯示文字框
+            document.getElementById('s4-caption-box').style.opacity = 1;
+            
+            // 開始播放動畫序列
+            s4_currentIndex = 0;
+            s4_isAnimating = true;
+            s4_playSequence();
         }
-        function s4_next() { s4_load(photoIndex + 1); }
+
+        // 2. 調整畫布大小
+        function s4_resizeCanvas() {
+            if(!s4_canvas) return;
+            s4_canvas.width = window.innerWidth;
+            s4_canvas.height = window.innerHeight;
+            // 重繪已存在的線 (簡單版：視窗改變大小時，暫不重繪線條以免複雜，只確保畫布不變形)
+        }
+
+        // 3. 核心動畫序列 (遞迴執行)
+        async function s4_playSequence() {
+            if (!s4_isAnimating) return; // 被中斷
+            if (s4_currentIndex >= CONFIG.photos.length) {
+                s4_finish();
+                return;
+            }
+
+            const i = s4_currentIndex;
+            const currentPos = s4_starPositions[i];
+            const prevPos = i > 0 ? s4_starPositions[i-1] : null;
+
+            // 更新文字
+            const captionEl = document.getElementById('s4-caption-text');
+            captionEl.style.opacity = 0; // 淡出舊字
+            setTimeout(() => {
+                captionEl.innerHTML = CONFIG.photos[i].text;
+                captionEl.style.opacity = 1; // 淡入新字
+            }, 500);
+
+            // 步驟 A: 如果不是第一張，先畫線連過來
+            if (prevPos) {
+                await s4_drawLine(prevPos, currentPos, 1000); // 1秒畫線
+            }
+
+            // 步驟 B: 點亮這顆星星
+            const starEl = document.getElementById(`star-${i}`);
+            starEl.style.opacity = 1; // 先顯示小白點
+            
+            // 稍微延遲後展開成照片
+            setTimeout(() => {
+                starEl.classList.add('active'); // 變大並顯示照片
+                // 播放音效 (選用)
+                // document.getElementById('sfx-star').play(); 
+            }, 100);
+
+            // 步驟 C: 停頓一下讓她看照片，然後進下一張
+            s4_currentIndex++;
+            setTimeout(s4_playSequence, 2500); // 每張照片停留 2.5 秒
+        }
+
+        // 4. 畫線動畫 (Canvas)
+        function s4_drawLine(start, end, duration) {
+            return new Promise(resolve => {
+                const startTime = performance.now();
+                
+                function draw(currentTime) {
+                    if (!s4_isAnimating) return; // 強制中斷
+
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1); // 0 到 1
+
+                    // 計算目前畫到的點
+                    const currentX = start.x + (end.x - start.x) * progress;
+                    const currentY = start.y + (end.y - start.y) * progress;
+
+                    // 設定線條樣式 (發光感)
+                    s4_ctx.beginPath();
+                    s4_ctx.moveTo(start.x, start.y);
+                    s4_ctx.lineTo(currentX, currentY);
+                    s4_ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+                    s4_ctx.lineWidth = 2;
+                    s4_ctx.shadowBlur = 10;
+                    s4_ctx.shadowColor = "#00f0ff"; // 螢光藍光暈
+                    s4_ctx.stroke();
+
+                    if (progress < 1) {
+                        requestAnimationFrame(draw);
+                    } else {
+                        resolve(); // 動畫完成
+                    }
+                }
+                requestAnimationFrame(draw);
+            });
+        }
+
+        // 5. 動畫結束處理
+        function s4_finish() {
+            s4_isAnimating = false;
+            document.getElementById('s4-caption-text').innerHTML = "星圖繪製完成。<br>這就是我們這一年的軌跡。";
+            
+            // 按鈕變成「前往下一關」
+            const btn = document.getElementById('s4-action-btn');
+            btn.innerText = "Level Up (前往蛋糕) >>";
+            btn.onclick = () => { gotoScene(5); };
+            btn.style.background = "#00f0ff";
+            btn.style.color = "#000";
+            btn.style.boxShadow = "0 0 20px #00f0ff";
+        }
+
+        // 6. 跳過或下一步按鈕邏輯
+        function s4_skipOrNext() {
+            // 如果還在跑動畫，就直接顯示全部
+            if (s4_isAnimating) {
+                s4_isAnimating = false; // 停止動畫迴圈
+                s4_currentIndex = CONFIG.photos.length; // 設為最後
+                
+                // 瞬間畫完所有線跟點亮星星
+                // (這裡簡單處理：重新整理畫面或直接跳轉，為求平順直接顯示全部有點複雜，建議直接跳最後文字)
+                document.querySelectorAll('.s4_star_node').forEach(el => el.classList.add('active'));
+                s4_finish();
+            } else {
+                // 如果已經結束，就去 Scene 5
+                gotoScene(5);
+            }
+        }
 // =========================================
         // SCENE 5 LOGIC: 蛋糕 (已修改：20秒延遲)
         // =========================================
@@ -748,6 +1006,4 @@ function moveButton() {
     </script>
 </body>
 </html>
-
-
 
