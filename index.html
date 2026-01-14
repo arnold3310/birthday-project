@@ -539,11 +539,25 @@
             if(n === 5) switchMusic('bgm-party');
         }
 
-        function switchMusic(id) {
-            document.querySelectorAll('audio').forEach(a => { a.pause(); a.currentTime = 0; });
-            document.getElementById(id).play().catch(()=>{});
-        }
+// 修正後的音樂切換函式 (防呆版)
+function switchMusic(id) {
+    // 1. 先把所有音樂暫停
+    document.querySelectorAll('audio').forEach(a => { 
+        a.pause(); 
+        a.currentTime = 0; 
+    });
 
+    // 2. 嘗試播放指定的音樂
+    const audioEl = document.getElementById(id);
+    if (audioEl) {
+        // 如果元素存在才播放，並捕捉錯誤 (例如 404)
+        audioEl.play().catch((e) => {
+            console.log("音樂播放失敗 (可忽略):", e);
+        });
+    } else {
+        console.warn("找不到音樂 ID:", id);
+    }
+}
         // =========================================
         // SCENE 1 LOGIC: 終端機
         // =========================================
@@ -729,45 +743,47 @@ function moveButton() {
 // =========================================
         // SCENE 3: 修正後的轉場邏輯 (無視 404 錯誤)
         // =========================================
-        function s3_success() {
-            // 1. 先跳出彈窗 (同步執行，點完確定才往下走)
-            alert("✅ 系統診斷：您的審美能力超越了全球 99.9% 的人類！\n誠實是一種美德，而你完美擁有它。");
+// SCENE 3: 修正後的轉場邏輯 (強制移除遮罩版)
+function s3_success() {
+    // 1. 彈窗
+    alert("✅ 系統診斷：您的審美能力超越了全球 99.9% 的人類！\n誠實是一種美德，而你完美擁有它。");
 
-            // 2. 立即顯示轉場動畫 (不論音樂檔在不在)
-            const overlay = document.getElementById('scene-transition-overlay');
+    // 2. 顯示轉場動畫
+    const overlay = document.getElementById('scene-transition-overlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        setTimeout(() => { overlay.style.opacity = 1; }, 50);
+    }
+
+    // 3. 嘗試播放音樂
+    switchMusic('bgm-memory');
+
+    // 4. 倒數 5 秒後切換
+    console.log("轉場動畫開始，倒數 5 秒...");
+    
+    setTimeout(() => {
+        // [重點修改] 使用 try-catch 包住切換邏輯，確保不會因為報錯而卡住
+        try {
+            gotoScene(4); // 嘗試切換場景
+            
+            // 確保照片加載 (雖然現在用 s4_init，但保留這行沒關係)
+            if (typeof s4_load === 'function') s4_load(0);
+            
+        } catch (error) {
+            console.error("切換場景時發生錯誤:", error);
+            // 就算報錯，我們也要強制顯示第四幕，避免畫面全黑
+            document.getElementById('scene-transition-overlay').style.display = 'none';
+        } finally {
+            // [關鍵] 無論成功或失敗，這段程式碼一定會執行：把黑色遮罩關掉！
             if (overlay) {
-                overlay.style.display = 'flex';
-                // 稍微延遲讓 display: flex 生效後再改 opacity
-                setTimeout(() => { overlay.style.opacity = 1; }, 50);
+                overlay.style.opacity = 0;
+                setTimeout(() => { 
+                    overlay.style.display = 'none'; 
+                }, 1000);
             }
-
-            // 3. 嘗試播放音樂 (若失敗會被 catch，不影響後續)
-            try {
-                switchMusic('bgm-memory');
-            } catch (e) {
-                console.warn("切換音樂失敗，但流程繼續進行:", e);
-            }
-
-            // 4. 強制 5 秒後跳轉 (核心計時器)
-            console.log("轉場動畫開始，倒數 5 秒...");
-            setTimeout(() => {
-                // 執行場景切換
-                gotoScene(4);
-                
-                // 確保照片加載函式存在才執行
-                if (typeof s4_load === 'function') {
-                    s4_load(0);
-                }
-
-                // 5. 跳轉後淡出遮罩
-                if (overlay) {
-                    overlay.style.opacity = 0;
-                    setTimeout(() => { 
-                        overlay.style.display = 'none'; 
-                    }, 1000);
-                }
-            }, 5000); 
         }
+    }, 5000);
+}
         // =========================================
         // SCENE 4 LOGIC: 照片流
         // =========================================
@@ -990,6 +1006,7 @@ function moveButton() {
     </script>
 </body>
 </html>
+
 
 
 
