@@ -1105,6 +1105,10 @@
         <source src="click.mp3" type="audio/mpeg">
     </audio>
 
+	<audio id="se-slash">
+        <source src="music/slash.mp3" type="audio/mpeg">
+    </audio>
+
     <div id="intro-layer">
         <canvas id="particle-canvas"></canvas>
 
@@ -1680,6 +1684,14 @@
 
             setTimeout(() => {
                 hero.classList.add('slashing'); 
+
+				const slashSound = document.getElementById('se-slash');
+                if (slashSound) {
+                    slashSound.currentTime = 0; // 重置時間 (確保每次都從頭播)
+                    slashSound.volume = 0.8;    // 音量大一點比較有氣勢
+                    slashSound.play().catch(() => {});
+                }
+				
                 slash.style.left = (bossRect.left + 100) + 'px';
                 slash.style.top = (bossRect.top + 100) + 'px';
                 slash.style.animation = "superSlash 0.3s forwards"; 
@@ -2318,6 +2330,7 @@ function switchMusic(playId) {
 </body>
 
 </html>
+
 
 
 
