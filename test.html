@@ -1916,18 +1916,19 @@
             updateCamera(-1);
         }
 
-        async function nextStep() {
-			if(isAnimating) return;
+async function nextStep() {
+            // 1. 防呆檢查：如果動畫正在跑，就不要重複執行
+            if(isAnimating) return;
 
-            // 🔥 新增：如果是第一次點擊 (準備出發)，才播放星空音樂
+            // 2. 音樂邏輯：如果是第一次點擊 (準備出發)，播放星空音樂
             if (currentIndex === -1) {
                 switchMusic('bgm-galaxy');
             }
 
-            isAnimating = true;
-            if(isAnimating) return;
+            // 3. 鎖定動畫狀態 (只寫一次就好！)
             isAnimating = true;
 
+            // --- 以下維持原本邏輯 ---
             if(currentIndex >= 0) {
                 messageCard.classList.remove('show');
                 typeText.innerHTML = "";
@@ -1953,6 +1954,115 @@
                 }
                 await wait(800);
             }
+
+            const nextIndex = currentIndex + 1;
+
+            // 結束轉場邏輯
+            if(nextIndex >= photoData.length) {
+                const nextBtn = document.getElementById('next-btn'); 
+                if(nextBtn) {
+                    nextBtn.innerText = "⚠️ 能量超載...";
+                    nextBtn.style.background = "#ff3333";
+                    nextBtn.style.borderColor = "#ff3333";
+                    nextBtn.style.pointerEvents = 'none';
+                }
+
+                const statusMsg = document.getElementById('status-message');
+                statusMsg.innerText = "⚠️ 偵測到強大壽星能量 ⚠️\n空間傳送啟動中...";
+                statusMsg.style.display = "block";
+                statusMsg.style.zIndex = "30000"; 
+                statusMsg.classList.add('status-pulse');
+
+                const flash = document.getElementById('flash-overlay');
+                flash.style.zIndex = "29999"; 
+                flash.style.opacity = 1;      
+                flash.style.transition = "opacity 2s ease-in"; 
+
+                setTimeout(() => {
+                    window.location.href = "test2.html";
+                }, 2500);
+
+                isAnimating = false;
+                return;
+            }
+
+            const universe = document.getElementById('universe');
+            universe.classList.add('hyperspace');
+            updateCamera(nextIndex);
+            
+            if(nextIndex > 0) {
+                const prevPos = starPositions[nextIndex-1];
+                const nextPos = starPositions[nextIndex];
+                await animateLine(prevPos, nextPos, 1200); 
+            } else {
+                await wait(1200);
+            }
+
+            universe.classList.remove('hyperspace');
+            const targetStar = document.getElementById(`star-${nextIndex}`);
+            if(targetStar) {
+                targetStar.style.transform = "translate(-50%, -50%) scale(1.5)";
+                setTimeout(() => {
+                    targetStar.style.transform = "translate(-50%, -50%) scale(1)";
+                }, 200);
+            }
+
+            const nextStar = document.getElementById(`star-${nextIndex}`);
+            const data = photoData[nextIndex];
+            nextStar.classList.add('medium');
+            await wait(600);
+
+            const rect = nextStar.getBoundingClientRect();
+            photoViewer.style.transition = 'none';
+            photoViewer.style.top = rect.top + 'px';
+            photoViewer.style.left = rect.left + 'px';
+            photoViewer.style.width = rect.width + 'px';
+            photoViewer.style.height = rect.height + 'px';
+            
+            if (data.src) {
+                photoViewer.style.backgroundImage = `url('${data.src}')`;
+                photoViewer.style.backgroundColor = 'transparent'; 
+            } else {
+                photoViewer.style.backgroundImage = 'none';
+                photoViewer.style.backgroundColor = data.color || '#333';
+            }
+            
+            photoViewer.style.opacity = 1; 
+            nextStar.classList.add('hidden');
+            void photoViewer.offsetWidth; 
+
+            photoViewer.style.transition = 'all 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            photoViewer.classList.add('center-stage');
+            
+            photoViewer.classList.remove('glitch-effect', 'floating-effect');
+            setTimeout(() => {
+                photoViewer.classList.add('glitch-effect');
+                setTimeout(() => {
+                    photoViewer.classList.remove('glitch-effect');
+                    if(!photoViewer.classList.contains('move-left')) {
+                        photoViewer.classList.add('floating-effect');
+                    }
+                }, 400); 
+            }, 800); 
+
+            await wait(1500);
+            photoViewer.classList.remove('floating-effect'); 
+            photoViewer.classList.add('move-left');
+            await wait(500); 
+            messageCard.classList.add('show');
+            await wait(800);
+            await typeWriterEffect(data.text);
+
+            progressBar.style.width = ((nextIndex + 1) / photoData.length * 100) + "%";
+            currentIndex = nextIndex;
+            isAnimating = false;
+            
+            const nextBtn2 = document.getElementById('next-btn');
+            if(nextBtn2) {
+                nextBtn2.innerText = "👇 下一張";
+                nextBtn2.style.opacity = 1;
+            }
+        }
 
 
         const nextIndex = currentIndex + 1;
@@ -2288,6 +2398,7 @@ function switchMusic(playId) {
 </body>
 
 </html>
+
 
 
 
