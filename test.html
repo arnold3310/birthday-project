@@ -1105,7 +1105,7 @@
         <source src="click.mp3" type="audio/mpeg">
     </audio>
 
-	<audio id="se-slash">
+    <audio id="se-slash">
         <source src="slash.mp3" type="audio/mpeg">
     </audio>
 
@@ -1660,56 +1660,60 @@
             }, 5000); // 10秒後再問一次
         }
 
-        function summonAuthor() {
+function summonAuthor() {
             closeHelp();
-            // 既然接受了，就清除倒數計時，不用再問了
-            if(helpTimer) clearTimeout(helpTimer);
-
-            // (以下維持原本的火柴人動畫邏輯...)
+            // 暫停 Boss 動作，乖乖挨打
             if(moveInterval) clearInterval(moveInterval);
             if(tauntInterval) clearInterval(tauntInterval);
             
+            // 1. 火柴人進場
             const hero = document.getElementById('stickman-hero');
             const slash = document.getElementById('slash-layer');
             const bossRect = bossAvatar.getBoundingClientRect();
 
+            // 設定火柴人位置 (在 Boss 左邊)
             hero.style.left = (bossRect.left - 100) + 'px';
             hero.style.top = (bossRect.top + 50) + 'px';
-            hero.style.transform = "scale(1)"; 
+            hero.style.transform = "scale(1)"; // 顯示
 
+            // 2. 蓄力 (舉手)
             setTimeout(() => {
                 hero.classList.add('attacking');
                 showTauntText(bossRect.left, bossRect.top - 100, "帥哥作者：借過！", "#fff");
             }, 500);
 
+            // 3. 揮刀 + 斬擊特效
             setTimeout(() => {
-                hero.classList.add('slashing'); 
-
-				const slashSound = document.getElementById('se-slash');
+                hero.classList.add('slashing'); // 手揮下
+                
+                // 🔥【音效區】播放揮劍音效
+                const slashSound = document.getElementById('se-slash');
                 if (slashSound) {
-                    slashSound.currentTime = 0; // 重置時間 (確保每次都從頭播)
-                    slashSound.volume = 0.8;    // 音量大一點比較有氣勢
-                    slashSound.play().catch(() => {});
+                    slashSound.currentTime = 0; 
+                    slashSound.volume = 0.8;
+                    // 加入錯誤捕捉，方便除錯
+                    slashSound.play().catch(e => console.error("音效播放失敗:", e));
                 }
-				
+
                 slash.style.left = (bossRect.left + 100) + 'px';
                 slash.style.top = (bossRect.top + 100) + 'px';
-                slash.style.animation = "superSlash 0.3s forwards"; 
+                slash.style.animation = "superSlash 0.3s forwards"; // 播放劍氣
                 
+                // 4. Boss 爆炸 (造成 99999 傷害)
                 setTimeout(() => {
                     applyDamage(99999, bossRect.left, bossRect.top);
-                    // 這裡不用 showDamageNumber 也沒關係，反正都要死了
+                    showDamageNumber(bossRect.left, bossRect.top, 99999);
                     bossDie();
                 }, 100);
 
             }, 1000);
 
+            // 5. 火柴人退場
             setTimeout(() => {
                 hero.style.opacity = 0;
                 setTimeout(() => { hero.style.left = "-200px"; hero.style.opacity = 1; }, 500);
             }, 2500);
         }
-
 
         function applyDamage(dmg, x, y) {
             bossHP -= dmg;
@@ -2330,6 +2334,7 @@ function switchMusic(playId) {
 </body>
 
 </html>
+
 
 
 
