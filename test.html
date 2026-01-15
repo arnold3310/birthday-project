@@ -1304,7 +1304,7 @@
                 cancelAnimationFrame(animationId);
                 flash.classList.add('flash-bang');
                 intro.style.opacity = 0;
-                switchMusic('bgm-galaxy');
+                switchMusic(null);
                 await wait(500);
                 intro.style.display = 'none'; 
                 if(typeof initGalaxy === 'function') initGalaxy(); 
@@ -1917,6 +1917,14 @@
         }
 
         async function nextStep() {
+			if(isAnimating) return;
+
+            // 🔥 新增：如果是第一次點擊 (準備出發)，才播放星空音樂
+            if (currentIndex === -1) {
+                switchMusic('bgm-galaxy');
+            }
+
+            isAnimating = true;
             if(isAnimating) return;
             isAnimating = true;
 
@@ -2280,6 +2288,7 @@ function switchMusic(playId) {
 </body>
 
 </html>
+
 
 
 
