@@ -1101,6 +1101,10 @@
         <source src="typing.mp3" type="audio/mpeg">
     </audio>
 
+	<audio id="se-click">
+        <source src="music/click.mp3" type="audio/mpeg">
+    </audio>
+
     <div id="intro-layer">
         <canvas id="particle-canvas"></canvas>
 
@@ -2275,10 +2279,46 @@ function switchMusic(playId) {
             }
         }
 
+		// ==================== 全局按鈕音效系統 ====================
+        function initButtonSound() {
+            const clickSound = document.getElementById('se-click');
+            if (!clickSound) return;
+
+            // 設定音量 (按鈕聲通常要清楚一點)
+            clickSound.volume = 0.6;
+
+            // 1. 抓出網頁上所有的 <button> 標籤
+            const buttons = document.querySelectorAll('button');
+            
+            // 2. 幫每一顆按鈕加上監聽器
+            buttons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    clickSound.currentTime = 0; // 每次點擊都重置時間 (支援連點)
+                    clickSound.play().catch(() => {}); // 忽略錯誤
+                });
+            });
+
+            // 3. 特別指定的非 button 元素 (例如寶箱、Boss) 如果也要聲音，可以手動加在這裡
+            const extraElements = ['#chest-wrapper', '#boss-avatar', '#item-get-layer'];
+            extraElements.forEach(selector => {
+                const el = document.querySelector(selector);
+                if(el) {
+                    el.addEventListener('click', () => {
+                        clickSound.currentTime = 0;
+                        clickSound.play().catch(() => {});
+                    });
+                }
+            });
+        }
+
+        // 啟動音效系統
+        initButtonSound();
+
     </script>
 </body>
 
 </html>
+
 
 
 
