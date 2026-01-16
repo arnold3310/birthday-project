@@ -1209,6 +1209,9 @@
     <audio id="se-slash">
         <source src="slash.mp3" type="audio/mpeg">
     </audio>
+<audio id="se-warp">
+        <source src="warp.mp3" type="audio/mpeg">
+    </audio>
 
     <div id="intro-layer">
 	
@@ -2504,6 +2507,13 @@ function switchMusic(playId) {
         preloadFragments();
 
         function startVortexTransition() {
+	    const warpSound = document.getElementById('se-warp');
+            if (warpSound) {
+                warpSound.currentTime = 0; 
+                warpSound.volume = 0.8; // 音量可自己調 (0.0 ~ 1.0)
+                warpSound.play().catch(e => console.log("音效播放失敗:", e));
+            }
+
             switchMusic('bgm-countdown'); 
             const statusMsg = document.getElementById('status-message');
             statusMsg.innerText = "正在穿越時空裂縫...";
@@ -2709,7 +2719,7 @@ function switchMusic(playId) {
             vortexId = requestAnimationFrame(animateVortex);
         }
 
-        function finishVortexAndStart() {
+	function finishVortexAndStart() {
             cancelAnimationFrame(vortexId);
             
             const flash = document.getElementById('flash-overlay');
@@ -2717,23 +2727,38 @@ function switchMusic(playId) {
             const statusMsg = document.getElementById('status-message');
             const scrollContent = document.getElementById('scroll-content');
             
+            // 確保卷軸隱藏
             if(scrollContent) scrollContent.style.display = 'none';
 
             statusMsg.innerText = "時空同步完成"; 
             flash.style.opacity = 1; 
-            switchMusic(null);
+            switchMusic(null); // 先暫停音樂
 
+            // 第一階段：閃光與 UI 淡出
             setTimeout(() => {
                 intro.style.transition = "opacity 1.5s";
                 intro.style.opacity = 0;
                 flash.style.transition = "opacity 2.5s";
                 flash.style.opacity = 0;
 
+                // 第二階段：切換到底層星空
                 setTimeout(() => { 
                     intro.style.display = 'none';
                     if(typeof initGalaxy === 'function') initGalaxy(); 
+                    
                     const ctrl = document.getElementById('control-panel');
                     if(ctrl) ctrl.classList.add('show');
+
+                    // 🔥【新增】自動出發邏輯
+                    setTimeout(() => {
+                        const nextBtn = document.getElementById('next-btn');
+                        if(nextBtn) {
+                            console.log("🚀 自動啟動星際旅程！");
+                            // 模擬點擊按鈕 (這樣會同時觸發音效、音樂和動畫)
+                            nextBtn.click();
+                        }
+                    }, 800); // 稍微延遲 0.8秒，讓玩家先看一眼星空再出發，節奏更舒服
+
                 }, 1500);
             }, 500);
         }
