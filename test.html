@@ -1118,6 +1118,66 @@
         .btn-no { background: #555; color: #aaa; border: 1px solid #777; }
         .btn-no:hover { background: #666; color: #fff; }
 
+
+/* ==================== 17. 卷軸燃燒特效 (V6: 燃燒殆盡版) ==================== */
+
+@keyframes burn-consume {
+    /* [0% - 10%]: 點燃瞬間 (熱膨脹) */
+    0% {
+        transform: translateY(0) scale(1);
+        filter: brightness(1);
+        opacity: 1;
+    }
+    10% {
+        transform: translateY(-10px) scale(1.1); /* 稍微變大 */
+        filter: brightness(1.5) sepia(1) hue-rotate(-30deg) drop-shadow(0 0 20px #ff4500);
+    }
+
+    /* [10% - 40%]: 劇烈燃燒 (最亮的時候) */
+    25% {
+        transform: translateY(-20px) scale(1.0) rotate(2deg); /* 開始縮回原大小 */
+        filter: brightness(2) sepia(1) saturate(5) hue-rotate(-40deg) drop-shadow(0 0 50px #ff0000);
+    }
+
+    /* [40% - 70%]: 被火吞噬 (開始明顯變小 + 炭化) */
+    50% {
+        transform: translateY(-40px) scale(0.7) rotate(-2deg); /* 剩下 70% 大小 */
+        filter: grayscale(0.8) brightness(0.6) sepia(1) drop-shadow(0 0 15px #8b0000);
+        opacity: 0.9;
+    }
+
+    /* [70% - 100%]: 燒盡 (縮小至無) */
+    80% {
+        transform: translateY(-60px) scale(0.3); /* 剩下 30% 大小 */
+        filter: grayscale(1) brightness(0.2) blur(2px);
+        opacity: 0.5;
+    }
+    100% {
+        transform: translateY(-80px) scale(0); /* 完全燒光 */
+        filter: grayscale(1) brightness(0) blur(10px);
+        opacity: 0;
+    }
+}
+
+.scroll-burn {
+    /* 設定 5秒 的燃燒過程 */
+    animation: burn-consume 5s cubic-bezier(0.45, 0, 0.55, 1) forwards !important;
+    z-index: 5000;
+    position: relative;
+}
+
+/* 餘燼粒子 (維持不變，增加氛圍) */
+.ember-particle {
+    position: absolute;
+    width: 3px; height: 3px;
+    background: #ff4500;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 4999;
+    box-shadow: 0 0 5px #ff0000;
+    animation: ember-fly 2s linear forwards;
+}
+
     </style>
 </head>
 <body>
@@ -2364,45 +2424,362 @@ function switchMusic(playId) {
 
         let rejectCount = 0; // 計算拒絕次數
 
-        function confirmStart(isYes) {
+	function confirmStart(isYes) {
             const modal = document.getElementById('scroll-confirm-modal');
-            
-            // 播放音效
             const clickSound = document.getElementById('se-click');
             if(clickSound) { clickSound.currentTime = 0; clickSound.play().catch(()=>{}); }
 
             if (isYes) {
-                // --- 選擇「是」 ---
-                modal.style.opacity = 0;
+                // 1. 關閉視窗
+                modal.style.display = 'none';
                 modal.classList.remove('active');
-                setTimeout(() => { modal.style.display = 'none'; }, 300);
                 
-                // 執行原本的倒數啟動函式
-                startCountdown();
+                // 2. 抓取元素
+                const scrollIcon = document.getElementById('scroll-icon');
+                const startBtn = document.getElementById('start-btn');
+                const scrollContent = document.getElementById('scroll-content');
+                
+                // 3. 隱藏按鈕
+                if(startBtn) {
+                    startBtn.style.opacity = 0; 
+                    startBtn.style.pointerEvents = 'none';
+                }
+
+                // 4. 啟動「越燒越小」動畫
+                if (scrollIcon) {
+                    scrollIcon.classList.remove('scroll-burn');
+                    void scrollIcon.offsetWidth; // 強制重繪
+                    scrollIcon.classList.add('scroll-burn');
+                }
+
+                // 5. 在 0.5 秒 (點燃後) 開始噴火星
+                setTimeout(() => {
+                    spawnFireParticles();
+                }, 500);
+
+                // 6. 等待 5秒 (完全燒光) 後切換
+                setTimeout(() => {
+                    if(scrollContent) scrollContent.style.display = 'none';
+                    startVortexTransition(); 
+                }, 5000); 
                 
             } else {
-                // --- 選擇「否」 (強制邏輯) ---
+                // (拒絕的邏輯維持不變)
                 rejectCount++;
                 const noBtn = document.getElementById('btn-no');
-
                 if (rejectCount === 1) {
                     alert("⚠️ 系統警告：回憶能量過強，無法取消！");
-                    noBtn.innerText = "真的不要嗎？";
-                    noBtn.style.color = "#fff";
+                    noBtn.innerText = "真的不要嗎？"; noBtn.style.color = "#fff";
                 } else if (rejectCount === 2) {
                     alert("🚫 錯誤：拒絕無效。命運的齒輪已經開始轉動...");
-                    noBtn.innerText = "好啦... (Yes)";
-                    noBtn.style.background = "#00f0ff"; // 變成「是」的顏色
-                    noBtn.style.color = "#000";
-                    noBtn.style.boxShadow = "0 0 10px #00f0ff";
-                    
-                    // 偷天換日：把按鈕功能改成「是」
+                    noBtn.innerText = "好啦... (Yes)"; noBtn.style.background = "#00f0ff";
+                    noBtn.style.color = "#000"; noBtn.style.boxShadow = "0 0 10px #00f0ff";
                     noBtn.onclick = function() { confirmStart(true); };
                 }
             }
         }
 
-    </script>
+// ==================== 16. 時光隧道過場 (A方案 V3: 線框隧道版) ====================
+        let vortexId;
+        let tunnelRings = []; // 隧道圈圈
+        let speedLines = [];  // 速度線
+        let memoryFragments = [];
+        let vortexStartTime = 0;
+        const VORTEX_DURATION = 8000; // 8秒過場
+
+        // 圖片預載入
+        let loadedFragmentImages = [];
+        function preloadFragments() {
+            const indices = [];
+            while(indices.length < 10) { // 多選一點
+                const r = Math.floor(Math.random() * photoData.length);
+                if(indices.indexOf(r) === -1) indices.push(r);
+            }
+            indices.forEach(i => {
+                const img = new Image();
+                img.src = photoData[i].src;
+                loadedFragmentImages.push(img);
+            });
+        }
+        preloadFragments();
+
+        function startVortexTransition() {
+            switchMusic('bgm-countdown'); 
+            const statusMsg = document.getElementById('status-message');
+            statusMsg.innerText = "正在穿越時空裂縫...";
+            statusMsg.style.display = "block";
+            statusMsg.classList.add('status-pulse');
+
+            initCanvas(); // 確保畫布尺寸正確
+            
+            // 重置所有陣列
+            tunnelRings = [];
+            speedLines = [];
+            memoryFragments = [];
+            vortexStartTime = Date.now();
+
+            // 1. 初始化隧道圈圈 (產生 15 個)
+            for(let i=0; i<15; i++) {
+                tunnelRings.push({
+                    z: i * 200, // 深度 Z
+                    rotation: i * 0.1,
+                    color: i % 2 === 0 ? '#00f0ff' : '#ffffff'
+                });
+            }
+
+            // 2. 初始化速度線 (產生 30 條)
+            for(let i=0; i<30; i++) {
+                speedLines.push({
+                    angle: Math.random() * Math.PI * 2,
+                    length: Math.random() * 200 + 100,
+                    speed: Math.random() * 10 + 20,
+                    dist: Math.random() * 500 + 200
+                });
+            }
+
+            animateVortex();
+
+            setTimeout(() => {
+                finishVortexAndStart();
+            }, VORTEX_DURATION);
+        }
+
+        function animateVortex() {
+            const now = Date.now();
+            const elapsed = now - vortexStartTime;
+            const progress = Math.min(elapsed / VORTEX_DURATION, 1);
+            
+            // A. 背景 (帶有殘影效果，不用純黑)
+            // 越到後面背景越亮，模擬出口
+            const bgAlpha = 0.3; 
+            pCtx.fillStyle = `rgba(5, 5, 10, ${bgAlpha})`;
+            pCtx.fillRect(0, 0, pW, pH);
+
+            const cx = pW / 2;
+            const cy = pH / 2;
+
+            // B. 繪製線框隧道 (非粒子特效！)
+            pCtx.lineWidth = 3;
+            const fov = 600; // 視野深度
+
+            tunnelRings.forEach((ring, index) => {
+                // 移動邏輯：往鏡頭衝過來
+                ring.z -= 15 + (progress * 30); // 越來越快
+                ring.rotation += 0.02;
+
+                // 如果衝出鏡頭，就重置到遠方
+                if(ring.z < -fov) {
+                    ring.z += 3000;
+                    ring.color = Math.random() > 0.5 ? '#00f0ff' : '#ffd700'; // 變色
+                }
+
+                // 3D 投影計算
+                const scale = fov / (fov + ring.z);
+                const size = 600 * scale; // 圈圈大小
+                
+                if (size > 0) {
+                    pCtx.strokeStyle = ring.color;
+                    pCtx.globalAlpha = Math.min(1, scale * 2); // 遠處透明，近處實心
+                    
+                    // 畫八角形 (更有科技感)
+                    pCtx.beginPath();
+                    for (let i = 0; i <= 8; i++) {
+                        const theta = (i / 8) * Math.PI * 2 + ring.rotation;
+                        const x = cx + Math.cos(theta) * size;
+                        const y = cy + Math.sin(theta) * size;
+                        if (i === 0) pCtx.moveTo(x, y);
+                        else pCtx.lineTo(x, y);
+                    }
+                    pCtx.closePath();
+                    pCtx.stroke();
+                }
+            });
+            pCtx.globalAlpha = 1;
+
+            // C. 繪製速度線 (漫畫衝刺感)
+            pCtx.strokeStyle = '#ffffff';
+            pCtx.lineWidth = 2;
+            pCtx.beginPath();
+            speedLines.forEach(line => {
+                line.dist -= line.speed + (progress * 20); // 加速吸入
+                if(line.dist < 50) {
+                    line.dist = Math.max(pW, pH); // 重置到最外圈
+                    line.angle = Math.random() * Math.PI * 2;
+                }
+                
+                const x1 = cx + Math.cos(line.angle) * line.dist;
+                const y1 = cy + Math.sin(line.angle) * line.dist;
+                const x2 = cx + Math.cos(line.angle) * (line.dist + line.length);
+                const y2 = cy + Math.sin(line.angle) * (line.dist + line.length);
+                
+                pCtx.moveTo(x1, y1);
+                pCtx.lineTo(x2, y2);
+            });
+            pCtx.stroke();
+
+            // D. 隨機年份數字 (Data Stream)
+            if (elapsed % 10 < 2) { // 每幾幀閃一次
+                pCtx.fillStyle = 'rgba(0, 240, 255, 0.3)';
+                pCtx.font = 'bold 100px monospace';
+                pCtx.textAlign = 'center';
+                const randomYear = 1990 + Math.floor(Math.random() * 35);
+                // 隨機出現在畫面上
+                const rx = Math.random() * pW;
+                const ry = Math.random() * pH;
+                pCtx.fillText(randomYear, rx, ry);
+            }
+
+            // E. 記憶碎片 (照片)
+            // 在 1秒 ~ 7秒 之間生成
+            if (elapsed > 1000 && elapsed < VORTEX_DURATION - 1000 && Math.random() > 0.94) {
+                const img = loadedFragmentImages[Math.floor(Math.random() * loadedFragmentImages.length)];
+                if (img) {
+                    memoryFragments.push({
+                        img: img,
+                        x: cx, y: cy,
+                        z: 2000, // 從遠方生成
+                        rotation: Math.random() * Math.PI * 2,
+                        rotSpeed: (Math.random() - 0.5) * 0.1,
+                        opacity: 0
+                    });
+                }
+            }
+
+            // 繪製碎片
+            for(let i = memoryFragments.length - 1; i >= 0; i--) {
+                let f = memoryFragments[i];
+                
+                // 碎片往前飛
+                f.z -= 25 + (progress * 20);
+                f.rotation += f.rotSpeed;
+
+                const scale = fov / (fov + f.z);
+                f.opacity = Math.min(1, scale); // 越近越清楚
+
+                if (f.z < -fov + 100) { // 飛過頭了
+                    memoryFragments.splice(i, 1);
+                    continue;
+                }
+
+                pCtx.save();
+                pCtx.translate(cx, cy);
+                pCtx.scale(scale, scale); // 近大遠小
+                
+                // 讓照片稍微偏離中心旋轉飛出
+                const flyOffset = (2000 - f.z) * 0.5;
+                pCtx.translate(Math.cos(f.rotation)*flyOffset, Math.sin(f.rotation)*flyOffset);
+                
+                pCtx.rotate(f.rotation);
+                pCtx.globalAlpha = f.opacity;
+
+                // 拍立得樣式
+                pCtx.fillStyle = '#fff';
+                pCtx.shadowBlur = 10;
+                pCtx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+                pCtx.fillRect(-100, -80, 200, 190);
+                try {
+                    pCtx.drawImage(f.img, -90, -70, 180, 150);
+                } catch(e){}
+                pCtx.restore();
+            }
+
+            // F. 故障雜訊 (Glitch Effect) - 偶爾錯位
+            if (Math.random() > 0.95) {
+                const sliceH = Math.random() * 50 + 20;
+                const sliceY = Math.random() * pH;
+                const offset = (Math.random() - 0.5) * 30;
+                // 簡單的 Canvas 錯位模擬：把一塊畫面剪下來，貼到旁邊
+                try {
+                    const slice = pCtx.getImageData(0, sliceY, pW, sliceH);
+                    pCtx.putImageData(slice, offset, sliceY);
+                } catch(e) {} // 避免跨域報錯
+                
+                // 隨機色塊
+                pCtx.fillStyle = Math.random() > 0.5 ? 'rgba(255,0,0,0.1)' : 'rgba(0,255,255,0.1)';
+                pCtx.fillRect(0, sliceY, pW, sliceH);
+            }
+
+            // G. 結尾白光
+            if (elapsed > VORTEX_DURATION - 1000) {
+                const flashAlpha = (elapsed - (VORTEX_DURATION - 1000)) / 1000;
+                pCtx.fillStyle = `rgba(255, 255, 255, ${flashAlpha})`;
+                pCtx.fillRect(0, 0, pW, pH);
+            }
+
+            vortexId = requestAnimationFrame(animateVortex);
+        }
+
+        function finishVortexAndStart() {
+            cancelAnimationFrame(vortexId);
+            
+            const flash = document.getElementById('flash-overlay');
+            const intro = document.getElementById('intro-layer');
+            const statusMsg = document.getElementById('status-message');
+            const scrollContent = document.getElementById('scroll-content');
+            
+            if(scrollContent) scrollContent.style.display = 'none';
+
+            statusMsg.innerText = "時空同步完成"; 
+            flash.style.opacity = 1; 
+            switchMusic(null);
+
+            setTimeout(() => {
+                intro.style.transition = "opacity 1.5s";
+                intro.style.opacity = 0;
+                flash.style.transition = "opacity 2.5s";
+                flash.style.opacity = 0;
+
+                setTimeout(() => { 
+                    intro.style.display = 'none';
+                    if(typeof initGalaxy === 'function') initGalaxy(); 
+                    const ctrl = document.getElementById('control-panel');
+                    if(ctrl) ctrl.classList.add('show');
+                }, 1500);
+            }, 500);
+        }
+// ==================== 卷軸燃燒粒子特效 ====================
+	function spawnFireParticles() {
+            const scrollIcon = document.getElementById('scroll-icon');
+            if(!scrollIcon) return;
+            
+            const rect = scrollIcon.getBoundingClientRect();
+            // 取得中心點
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            // 產生 50 顆粒子
+            for(let i=0; i<50; i++) {
+                setTimeout(() => {
+                    const ember = document.createElement('div');
+                    ember.className = 'ember-particle';
+                    document.body.appendChild(ember);
+                    
+                    // 從中心點發射
+                    ember.style.left = centerX + 'px';
+                    ember.style.top = centerY + 'px'; 
+                    
+                    // 隨機向四周噴射
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = 50 + Math.random() * 100; // 距離縮短一點，配合變小的卷軸
+                    
+                    // 計算飛行終點
+                    const tx = Math.cos(angle) * dist;
+                    const ty = Math.sin(angle) * dist - 50; // 稍微往上飄 (熱氣流)
+                    
+                    ember.style.setProperty('--tx', tx + 'px');
+                    ember.style.setProperty('--ty', ty + 'px');
+                    
+                    // 顏色：紅/橘/灰
+                    const rand = Math.random();
+                    if (rand > 0.6) ember.style.backgroundColor = '#ff4500'; // 火紅
+                    else if (rand > 0.3) ember.style.backgroundColor = '#ff8800'; // 橘
+                    else ember.style.backgroundColor = '#555'; // 灰燼
+                    
+                    setTimeout(() => ember.remove(), 2000);
+                }, i * 40); // 慢慢噴，持續燃燒感
+            }
+        }
+ </script>
 </body>
 
 </html>
