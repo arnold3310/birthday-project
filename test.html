@@ -1512,38 +1512,48 @@
         const bossHint = document.querySelector('.boss-hint');
         const startBtnContainer = document.getElementById('start-btn-container');
         const helpModal = document.getElementById('help-modal');
-
-	function initBossBattle() {
-            // ... (原本的初始化代碼) ...
+function initBossBattle() {
+            // 1. 重置變數
+            bossPhase = 1; bossHP = 100; maxHP = 100;
+            bossHint.innerText = ">> 點擊怪物進行攻擊 <<";
+            bossAvatar.innerText = "👾"; 
+            bossAvatar.style.fontSize = "8rem";
+            bossAvatar.classList.remove('boss-scary');
+            bossAvatar.style.position = 'static'; 
+            bossAvatar.style.opacity = 1;
+            updateHPBar();
             
+            // 2. 清除舊的計時器
+            if(moveInterval) clearInterval(moveInterval); 
+            if(tauntInterval) clearInterval(tauntInterval);
+            if(helpTimer) clearTimeout(helpTimer);
             helpModal.style.display = 'none';
 
-            // 🔥 修改這裡：直接播放 Boss 音樂
+            // 3. 🔥【核心修改】嘗試播放音樂
+            // 先嘗試直接播 (部分瀏覽器可能允許)
             switchMusic('bgm-boss');
 
-            // 備用方案：如果瀏覽器擋住自動播放，則在使用者點擊任意處時補播
+            // 4. 🔥【備用方案】如果被擋，則等待使用者點擊「任意處」時補播
+            // 這樣你不用點到 Boss，只要點一下網頁空白處，音樂就會出來了
             document.addEventListener('click', function startAudio() {
                 const bossBgm = document.getElementById('bgm-boss');
-                if(bossBgm && bossBgm.paused && bossHP > 0) {
+                // 如果音樂還沒開始播，就強制播放
+                if(bossBgm && bossBgm.paused) {
                     switchMusic('bgm-boss');
                 }
-                // 播了之後就移除這個監聽器，避免干擾後續
+                // 播了之後就移除這個監聽器，避免重複執行
                 document.removeEventListener('click', startAudio);
             }, { once: true });
         }
         
-        initBossBattle();
+  
 
-        function hitBoss(e) {
-
-            const bossBgm = document.getElementById('bgm-boss');
-            if (bossBgm && bossBgm.paused && bossHP > 0) {
-                switchMusic('bgm-boss');
-            }
-
+	function hitBoss(e) {
             if(bossHP <= 0 && bossPhase === 2) return;
             if(isTeleporting) return;
+            
             const x = e.clientX; const y = e.clientY;
+            
             if (bossPhase === 1) handlePhase1Damage(x, y);
             else handlePhase2Logic(x, y);
         }
@@ -1715,6 +1725,7 @@ function summonAuthor() {
             }, 2500);
         }
 
+
         function applyDamage(dmg, x, y) {
             bossHP -= dmg;
             if(bossHP < 0) bossHP = 0;
@@ -1833,7 +1844,7 @@ function summonAuthor() {
             helpModal.style.display = 'none';
         }
 
-        function summonAuthor() {
+function summonAuthor() {
             closeHelp();
             // 暫停 Boss 動作，乖乖挨打
             if(moveInterval) clearInterval(moveInterval);
@@ -1858,6 +1869,16 @@ function summonAuthor() {
             // 3. 揮刀 + 斬擊特效
             setTimeout(() => {
                 hero.classList.add('slashing'); // 手揮下
+                
+                // 🔥【音效區】播放揮劍音效
+                const slashSound = document.getElementById('se-slash');
+                if (slashSound) {
+                    slashSound.currentTime = 0; 
+                    slashSound.volume = 0.8;
+                    // 加入錯誤捕捉，方便除錯
+                    slashSound.play().catch(e => console.error("音效播放失敗:", e));
+                }
+
                 slash.style.left = (bossRect.left + 100) + 'px';
                 slash.style.top = (bossRect.top + 100) + 'px';
                 slash.style.animation = "superSlash 0.3s forwards"; // 播放劍氣
@@ -2295,6 +2316,7 @@ function switchMusic(playId) {
             }
         }
 
+
 		// ==================== 全局按鈕音效系統 ====================
         function initButtonSound() {
             const clickSound = document.getElementById('se-click');
@@ -2334,6 +2356,7 @@ function switchMusic(playId) {
 </body>
 
 </html>
+
 
 
 
