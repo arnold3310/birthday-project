@@ -1077,6 +1077,47 @@
             animation: fadeIn 1s 1.5s forwards; z-index: 2;
         }
 
+/* ==================== 15. 確認視窗 (新功能) ==================== */
+        #scroll-confirm-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); /* 背景變暗 */
+            z-index: 45000; /* 比按鈕高，但比遮罩低 */
+            display: none; /* 預設隱藏 */
+            justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.3s;
+        }
+
+        .confirm-box {
+            width: 300px; padding: 30px;
+            background: rgba(16, 24, 35, 0.95);
+            border: 2px solid #00f0ff;
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.3);
+            border-radius: 15px; text-align: center;
+            transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        /* 視窗彈出動畫 */
+        #scroll-confirm-modal.active .confirm-box { transform: scale(1); }
+
+        .confirm-title {
+            font-size: 1.5rem; color: #ffd700; font-weight: bold; margin-bottom: 15px;
+            text-shadow: 0 0 10px #ffd700;
+        }
+        .confirm-text {
+            font-size: 1.1rem; color: #fff; margin-bottom: 30px; line-height: 1.6;
+        }
+
+        .confirm-btn-group { display: flex; justify-content: space-around; gap: 15px; }
+        
+        .confirm-btn {
+            padding: 10px 25px; border: none; border-radius: 5px;
+            font-size: 1rem; cursor: pointer; font-weight: bold; transition: 0.3s;
+        }
+        .btn-yes { background: #00f0ff; color: #000; box-shadow: 0 0 10px #00f0ff; }
+        .btn-yes:hover { transform: scale(1.1); background: #fff; }
+        
+        .btn-no { background: #555; color: #aaa; border: 1px solid #777; }
+        .btn-no:hover { background: #666; color: #fff; }
+
     </style>
 </head>
 <body>
@@ -1110,6 +1151,20 @@
     </audio>
 
     <div id="intro-layer">
+	
+	<div id="scroll-confirm-modal">
+            <div class="confirm-box">
+                <div class="confirm-title">📜 系統提示</div>
+                <div class="confirm-text">
+                    檢測到高濃度回憶能量。<br>
+                    是否立即啟用「回憶卷軸」？
+                </div>
+                <div class="confirm-btn-group">
+                    <button class="confirm-btn btn-yes" onclick="confirmStart(true)">是 (Yes)</button>
+                    <button id="btn-no" class="confirm-btn btn-no" onclick="confirmStart(false)">否 (No)</button>
+                </div>
+            </div>
+        </div>
         <canvas id="particle-canvas"></canvas>
 
            <div id="item-get-layer" onclick="finishItemGet()">
@@ -1167,9 +1222,9 @@
                 <div class="chest-hint">✨ 點擊開啟神話寶箱 ✨</div>
             </div>
 
-            <div id="scroll-content">
+ 	     <div id="scroll-content">
                 <div id="scroll-icon">📜</div>
-                <button id="start-btn" onclick="startCountdown()">拾取回憶卷軸</button>
+                <button id="start-btn" onclick="askToStart()">拾取回憶卷軸</button>
             </div>
         </div>
 
@@ -2291,7 +2346,64 @@ function switchMusic(playId) {
         // 啟動音效系統
         initButtonSound();
 
+
+// ==================== 10. 確認視窗邏輯 (強制選項) ====================
+        function askToStart() {
+            const modal = document.getElementById('scroll-confirm-modal');
+            modal.style.display = 'flex';
+            // 稍微延遲一點讓 transition 生效
+            setTimeout(() => {
+                modal.style.opacity = 1;
+                modal.classList.add('active');
+            }, 10);
+            
+            // 播放點擊音效
+            const clickSound = document.getElementById('se-click');
+            if(clickSound) { clickSound.currentTime = 0; clickSound.play().catch(()=>{}); }
+        }
+
+        let rejectCount = 0; // 計算拒絕次數
+
+        function confirmStart(isYes) {
+            const modal = document.getElementById('scroll-confirm-modal');
+            
+            // 播放音效
+            const clickSound = document.getElementById('se-click');
+            if(clickSound) { clickSound.currentTime = 0; clickSound.play().catch(()=>{}); }
+
+            if (isYes) {
+                // --- 選擇「是」 ---
+                modal.style.opacity = 0;
+                modal.classList.remove('active');
+                setTimeout(() => { modal.style.display = 'none'; }, 300);
+                
+                // 執行原本的倒數啟動函式
+                startCountdown();
+                
+            } else {
+                // --- 選擇「否」 (強制邏輯) ---
+                rejectCount++;
+                const noBtn = document.getElementById('btn-no');
+
+                if (rejectCount === 1) {
+                    alert("⚠️ 系統警告：回憶能量過強，無法取消！");
+                    noBtn.innerText = "真的不要嗎？";
+                    noBtn.style.color = "#fff";
+                } else if (rejectCount === 2) {
+                    alert("🚫 錯誤：拒絕無效。命運的齒輪已經開始轉動...");
+                    noBtn.innerText = "好啦... (Yes)";
+                    noBtn.style.background = "#00f0ff"; // 變成「是」的顏色
+                    noBtn.style.color = "#000";
+                    noBtn.style.boxShadow = "0 0 10px #00f0ff";
+                    
+                    // 偷天換日：把按鈕功能改成「是」
+                    noBtn.onclick = function() { confirmStart(true); };
+                }
+            }
+        }
+
     </script>
 </body>
 
 </html>
+
