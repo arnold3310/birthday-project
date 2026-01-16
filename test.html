@@ -1513,14 +1513,14 @@
         const startBtnContainer = document.getElementById('start-btn-container');
         const helpModal = document.getElementById('help-modal');
 
-	initBossBattle();
+	
 	
 
 	function initBossBattle() {
 
 	    
             // 1. 重置變數
-            bossPhase = 1; bossHP = 200; maxHP = 200;
+            bossPhase = 1; bossHP = 100; maxHP = 100;
             bossHint.innerText = ">> 點擊怪物進行攻擊 <<";
             bossAvatar.innerText = "👻"; 
             bossAvatar.style.fontSize = "8rem";
@@ -1540,7 +1540,7 @@
             switchMusic('bgm-boss');
             
         }
-
+	initBossBattle();
   
 
 	function hitBoss(e) {
@@ -1834,6 +1834,33 @@ function summonAuthor() {
             bossLayer.appendChild(el);
             setTimeout(() => el.remove(), 800);
         }
+	//BOOS死亡
+
+        function bossDie() {
+	    switchMusic('bgm-win');
+            // 清除所有計時器
+            if(moveInterval) clearInterval(moveInterval);
+            if(tauntInterval) clearInterval(tauntInterval);
+            if(helpTimer) clearTimeout(helpTimer);
+
+            bossAvatar.style.transition = "all 0.5s";
+            bossAvatar.style.transform = "scale(0) rotate(180deg)";
+            bossAvatar.style.opacity = 0;
+            warningSign.innerText = "VICTORY!";
+            warningSign.style.borderColor = "#ffd700";
+            warningSign.style.color = "#ffd700";
+            bossHint.style.display = 'none';
+            setTimeout(() => {
+                bossLayer.style.opacity = 0;
+                setTimeout(() => {
+                    bossLayer.style.display = 'none';
+                    startBtnContainer.style.display = 'flex';
+                    document.getElementById('chest-wrapper').style.display = 'block';
+                    document.getElementById('scroll-content').style.display = 'none';
+                }, 1000);
+            }, 800);
+        }
+
 
 
 
@@ -2268,17 +2295,3 @@ function switchMusic(playId) {
 </body>
 
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
