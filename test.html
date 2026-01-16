@@ -1487,7 +1487,7 @@
         }
 
         // ========================
-// ========================
+
 
 
 
@@ -1512,16 +1512,24 @@
         const bossHint = document.querySelector('.boss-hint');
         const startBtnContainer = document.getElementById('start-btn-container');
         const helpModal = document.getElementById('help-modal');
-function initBossBattle() {
+
+	initBossBattle();
+	
+
+	function initBossBattle() {
+
+	    
             // 1. 重置變數
-            bossPhase = 1; bossHP = 100; maxHP = 100;
+            bossPhase = 1; bossHP = 200; maxHP = 200;
             bossHint.innerText = ">> 點擊怪物進行攻擊 <<";
-            bossAvatar.innerText = "👾"; 
+            bossAvatar.innerText = "👻"; 
             bossAvatar.style.fontSize = "8rem";
             bossAvatar.classList.remove('boss-scary');
             bossAvatar.style.position = 'static'; 
             bossAvatar.style.opacity = 1;
             updateHPBar();
+
+            
             
             // 2. 清除舊的計時器
             if(moveInterval) clearInterval(moveInterval); 
@@ -1529,26 +1537,15 @@ function initBossBattle() {
             if(helpTimer) clearTimeout(helpTimer);
             helpModal.style.display = 'none';
 
-            // 3. 🔥【核心修改】嘗試播放音樂
-            // 先嘗試直接播 (部分瀏覽器可能允許)
             switchMusic('bgm-boss');
-
-            // 4. 🔥【備用方案】如果被擋，則等待使用者點擊「任意處」時補播
-            // 這樣你不用點到 Boss，只要點一下網頁空白處，音樂就會出來了
-            document.addEventListener('click', function startAudio() {
-                const bossBgm = document.getElementById('bgm-boss');
-                // 如果音樂還沒開始播，就強制播放
-                if(bossBgm && bossBgm.paused) {
-                    switchMusic('bgm-boss');
-                }
-                // 播了之後就移除這個監聽器，避免重複執行
-                document.removeEventListener('click', startAudio);
-            }, { once: true });
+            
         }
-        
+
   
 
 	function hitBoss(e) {
+	    
+	
             if(bossHP <= 0 && bossPhase === 2) return;
             if(isTeleporting) return;
             
@@ -1838,91 +1835,6 @@ function summonAuthor() {
             setTimeout(() => el.remove(), 800);
         }
 
-        // --- 救援系統邏輯 ---
-
-        function closeHelp() {
-            helpModal.style.display = 'none';
-        }
-
-function summonAuthor() {
-            closeHelp();
-            // 暫停 Boss 動作，乖乖挨打
-            if(moveInterval) clearInterval(moveInterval);
-            if(tauntInterval) clearInterval(tauntInterval);
-            
-            // 1. 火柴人進場
-            const hero = document.getElementById('stickman-hero');
-            const slash = document.getElementById('slash-layer');
-            const bossRect = bossAvatar.getBoundingClientRect();
-
-            // 設定火柴人位置 (在 Boss 左邊)
-            hero.style.left = (bossRect.left - 100) + 'px';
-            hero.style.top = (bossRect.top + 50) + 'px';
-            hero.style.transform = "scale(1)"; // 顯示
-
-            // 2. 蓄力 (舉手)
-            setTimeout(() => {
-                hero.classList.add('attacking');
-                showTauntText(bossRect.left, bossRect.top - 100, "帥哥作者：借過！", "#fff");
-            }, 500);
-
-            // 3. 揮刀 + 斬擊特效
-            setTimeout(() => {
-                hero.classList.add('slashing'); // 手揮下
-                
-                // 🔥【音效區】播放揮劍音效
-                const slashSound = document.getElementById('se-slash');
-                if (slashSound) {
-                    slashSound.currentTime = 0; 
-                    slashSound.volume = 0.8;
-                    // 加入錯誤捕捉，方便除錯
-                    slashSound.play().catch(e => console.error("音效播放失敗:", e));
-                }
-
-                slash.style.left = (bossRect.left + 100) + 'px';
-                slash.style.top = (bossRect.top + 100) + 'px';
-                slash.style.animation = "superSlash 0.3s forwards"; // 播放劍氣
-                
-                // 4. Boss 爆炸 (造成 99999 傷害)
-                setTimeout(() => {
-                    applyDamage(99999, bossRect.left, bossRect.top);
-                    showDamageNumber(bossRect.left, bossRect.top, 99999);
-                    bossDie();
-                }, 100);
-
-            }, 1000);
-
-            // 5. 火柴人退場
-            setTimeout(() => {
-                hero.style.opacity = 0;
-                setTimeout(() => { hero.style.left = "-200px"; hero.style.opacity = 1; }, 500);
-            }, 2500);
-        }
-
-        function bossDie() {
-	    switchMusic('bgm-win');
-            // 清除所有計時器
-            if(moveInterval) clearInterval(moveInterval);
-            if(tauntInterval) clearInterval(tauntInterval);
-            if(helpTimer) clearTimeout(helpTimer);
-
-            bossAvatar.style.transition = "all 0.5s";
-            bossAvatar.style.transform = "scale(0) rotate(180deg)";
-            bossAvatar.style.opacity = 0;
-            warningSign.innerText = "VICTORY!";
-            warningSign.style.borderColor = "#ffd700";
-            warningSign.style.color = "#ffd700";
-            bossHint.style.display = 'none';
-            setTimeout(() => {
-                bossLayer.style.opacity = 0;
-                setTimeout(() => {
-                    bossLayer.style.display = 'none';
-                    startBtnContainer.style.display = 'flex';
-                    document.getElementById('chest-wrapper').style.display = 'block';
-                    document.getElementById('scroll-content').style.display = 'none';
-                }, 1000);
-            }, 800);
-        }
 
 
 
