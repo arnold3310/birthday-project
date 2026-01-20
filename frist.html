@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project</title>
+    <script src="https://cdn.jsdelivr.net/npm/fireworks-js@2.10.7/dist/index.umd.js"></script>
+    <style>
+        /* =========================================
+           1. 字體與全域設定
+           ========================================= */
+        @font-face {
+            font-family: "HanYiShangWei";
+            src: url("汉仪尚巍手书W.ttf") format("truetype");
+        }
+        @font-face {
+            font-family: "YuWei";
+            src: url("禹卫书法行书简体.ttf") format("truetype");
+        }
+
+        body {
+            margin: 0; padding: 0; background-color: #000; color: #fff;
+            font-family: "HanYiShangWei", "YuWei", 'Microsoft JhengHei', sans-serif;
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            overflow: hidden;
+            user-select: none; -webkit-user-select: none;
+            background: url('bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            transition: backdrop-filter 0.5s;
+        }
+        
+        body::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); z-index: -1;
+            transition: background 0.5s;
+        }
+
+        /* 紅色警戒背景特效 */
+        body.red-alert-mode::before {
+            background: rgba(50, 0, 0, 0.85);
+            animation: bgFlash 2s infinite alternate;
+        }
+        @keyframes bgFlash {
+            0% { background: rgba(50, 0, 0, 0.85); }
+            100% { background: rgba(100, 0, 0, 0.9); }
+        }
+
+        #game-frame {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            border: none; z-index: 50000; display: none; background: #000;
+        }
+
+        .scene-container { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; justify-content: center; align-items: center; flex-direction: column; }
+        .scene-container.active { display: flex; }
+        
+        #fireworks-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+
+        /* =========================================
+           遊戲通知 (Toast)
+           ========================================= */
+        #toast-msg {
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 255, 0, 0.15); border: 1px solid #0f0; color: #0f0;
+            padding: 15px 30px; border-radius: 5px; font-size: 1.2rem;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3); z-index: 30000;
+            transition: top 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            backdrop-filter: blur(5px);
+            text-align: center; letter-spacing: 2px; pointer-events: none;
+        }
+        #toast-msg.error { border-color: #ff003c; color: #ff003c; background: rgba(255, 0, 60, 0.15); box-shadow: 0 0 20px rgba(255, 0, 60, 0.3); }
+        #toast-msg.show { top: 50px; }
+
+        /* =========================================
+           開場引導層
+           ========================================= */
+        #intro-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 20000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 1s ease-out;
+        }
+        #intro-step-1 { text-align: center; cursor: pointer; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
+        .tap-hint { font-size: 1.5rem; color: #888; letter-spacing: 5px; animation: pulse 1.5s infinite; }
+        
+        #intro-step-2 { 
+            display: none; 
+            flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; width: 90%; max-width: 600px; 
+        }
+        
+        .intro-title { font-size: 2.5rem; color: #ffd700; margin-bottom: 30px; text-shadow: 0 0 10px #ffd700; letter-spacing: 3px; min-height: 60px; }
+        .intro-list { list-style: none; padding: 0; margin: 0 auto 30px auto; text-align: left; display: inline-block; min-width: 300px; }
+        .intro-list li { font-size: 1.6rem; margin: 15px 0; color: #ddd; letter-spacing: 2px; min-height: 35px; }
+        .intro-note { font-size: 1.1rem; color: #888; margin-bottom: 40px; min-height: 30px; letter-spacing: 1px; }
+
+        .intro-btn { 
+            padding: 18px 60px; font-size: 2rem; 
+            background: linear-gradient(90deg, rgba(0,0,0,0.8), rgba(20,20,20,0.8)); 
+            color: #0f0; border: 2px solid #0f0; border-radius: 50px; 
+            cursor: pointer; font-family: inherit; letter-spacing: 4px;
+            transition: all 0.4s ease; box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.8); position: relative;
+            overflow: hidden; animation: btnPulse 2s infinite alternate;
+        }
+        .intro-btn:hover { background: #0f0; color: #000; box-shadow: 0 0 50px #0f0, 0 0 20px #fff; transform: scale(1.05) translateY(-3px); text-shadow: none; }
+        .intro-btn::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transform: skewX(-25deg); transition: 0.5s;
+        }
+        .intro-btn:hover::before { left: 100%; transition: 0.7s; }
+        @keyframes pulse { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
+        @keyframes btnPulse { 0% { box-shadow: 0 0 15px rgba(0, 255, 0, 0.2); border-color: rgba(0, 255, 0, 0.5); } 100% { box-shadow: 0 0 30px rgba(0, 255, 0, 0.6); border-color: #0f0; } }
+
+        /* =========================================
+           SCENE 1: 終端機
+           ========================================= */
+        .s1_terminal {
+            border: 1px solid rgba(0, 255, 0, 0.6); 
+            padding: 50px; width: 90%; max-width: 600px;
+            background: linear-gradient(rgba(0, 20, 0, 0.9), rgba(0, 20, 0, 0.95));
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.2), inset 0 0 20px rgba(0, 50, 0, 0.5);
+            text-align: center; position: relative; z-index: 10; border-radius: 15px;
+            backdrop-filter: blur(5px);
+            animation: terminalPulse 3s infinite alternate;
+        }
+        @keyframes terminalPulse {
+            0% { box-shadow: 0 0 30px rgba(0, 255, 0, 0.1), inset 0 0 20px rgba(0, 50, 0, 0.3); border-color: rgba(0, 255, 0, 0.4); }
+            100% { box-shadow: 0 0 60px rgba(0, 255, 0, 0.3), inset 0 0 40px rgba(0, 100, 0, 0.6); border-color: rgba(0, 255, 0, 0.9); }
+        }
+        .s1_terminal::before {
+            content: 'SECURE LOGIN // SYSTEM V.21.0';
+            position: absolute; top: 0; left: 0; width: 100%; height: 30px;
+            background: rgba(0, 255, 0, 0.1); border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+            color: rgba(0, 255, 0, 0.7); font-size: 0.8rem; line-height: 30px; letter-spacing: 2px;
+            border-radius: 15px 15px 0 0;
+        }
+        .s1_text { 
+            color: #0f0; font-size: 1.4rem; text-align: left; 
+            margin: 40px 0 30px 0; min-height: 120px; 
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.8); 
+            line-height: 1.8; letter-spacing: 2px;
+            font-family: 'Consolas', "HanYiShangWei", monospace; 
+        }
+        .cursor-blink { display: inline-block; width: 10px; height: 20px; background: #0f0; animation: blink 1s infinite; vertical-align: middle; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .s1_input { 
+            background: rgba(0, 255, 0, 0.05); 
+            border: 1px solid rgba(0, 255, 0, 0.3); border-radius: 5px;
+            color: #fff; font-size: 2rem; text-align: center; 
+            width: 80%; outline: none; margin-bottom: 30px; padding: 10px;
+            letter-spacing: 8px; font-family: "HanYiShangWei", inherit; transition: 0.3s;
+        }
+        .s1_input:focus { border-color: #0f0; box-shadow: 0 0 15px rgba(0, 255, 0, 0.3); background: rgba(0, 255, 0, 0.1); }
+        .s1_btn { 
+            background: transparent; color: #0f0; border: 2px solid #0f0; padding: 15px 30px; 
+            font-weight: bold; cursor: pointer; width: 100%; font-size: 1.5rem; transition: 0.3s; 
+            font-family: "HanYiShangWei", inherit; border-radius: 50px; letter-spacing: 3px;
+            text-shadow: 0 0 5px #0f0;
+        }
+        .s1_btn:hover { background: #0f0; color: #000; box-shadow: 0 0 30px #0f0; transform: scale(1.02); }
+        .s1_loading_container { display: none; width: 100%; margin-top: 20px; text-align: left; }
+        .s1_loading_bar_bg { width: 100%; height: 10px; background: rgba(0, 255, 0, 0.1); border: 1px solid #0f0; margin-top: 10px; position: relative; }
+        .s1_loading_bar_fill { width: 0%; height: 100%; background: #0f0; box-shadow: 0 0 10px #0f0; transition: width 0.1s linear; }
+        .s1_status { color: #0f0; font-size: 0.9rem; margin-top: 8px; }
+
+        /* =========================================
+           SCENE 2 & 3 & 4: 賽博龐克卡片
+           ========================================= */
+        .cyber-card { 
+            width: 90%; max-width: 600px; padding: 50px; 
+            background: rgba(16, 16, 20, 0.85); backdrop-filter: blur(12px);
+            border: 2px solid rgba(0, 240, 255, 0.3); border-radius: 20px; 
+            text-align: center; 
+            box-shadow: 0 0 40px rgba(0, 240, 255, 0.15), inset 0 0 20px rgba(0, 0, 0, 0.8);
+            z-index: 10; position: relative;
+            animation: borderPulseCyan 4s infinite alternate;
+        }
+        .cyber-card.yellow-theme { border-color: rgba(255, 215, 0, 0.4); box-shadow: 0 0 40px rgba(255, 215, 0, 0.15), inset 0 0 20px rgba(0, 0, 0, 0.8); animation: borderPulseYellow 4s infinite alternate; }
+        
+        /* Scene 4 紅色警戒樣式 */
+        .cyber-card.red-theme {
+            border-color: #ff003c;
+            box-shadow: 0 0 60px rgba(255, 0, 60, 0.3), inset 0 0 30px rgba(0, 0, 0, 0.9);
+            animation: borderPulseRed 0.5s infinite alternate; /* 快速閃爍 */
+        }
+
+        @keyframes borderPulseCyan {
+            0% { box-shadow: 0 0 30px rgba(0, 240, 255, 0.1), inset 0 0 20px rgba(0, 0, 0, 0.8); border-color: rgba(0, 240, 255, 0.3); }
+            100% { box-shadow: 0 0 60px rgba(0, 240, 255, 0.3), inset 0 0 10px rgba(0, 0, 0, 0.5); border-color: rgba(0, 240, 255, 0.8); }
+        }
+        @keyframes borderPulseYellow {
+            0% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.1), inset 0 0 20px rgba(0, 0, 0, 0.8); border-color: rgba(255, 215, 0, 0.3); }
+            100% { box-shadow: 0 0 60px rgba(255, 215, 0, 0.3), inset 0 0 10px rgba(0, 0, 0, 0.5); border-color: rgba(255, 215, 0, 0.8); }
+        }
+        @keyframes borderPulseRed {
+            0% { box-shadow: 0 0 30px rgba(255, 0, 60, 0.2); border-color: rgba(255, 0, 60, 0.5); }
+            100% { box-shadow: 0 0 80px rgba(255, 0, 60, 0.6); border-color: #ff003c; transform: scale(1.01); }
+        }
+
+        .cyber-title { font-size: 2.5rem; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 4px; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5); min-height: 50px; }
+        .yellow-theme .cyber-title { color: #ffd700; text-shadow: 0 0 15px #ffd700; }
+        .pink-theme .cyber-title { color: #ff4d6d; text-shadow: 0 0 15px #ff4d6d; }
+        .red-theme .cyber-title { color: #ff003c; text-shadow: 0 0 20px #ff003c; animation: glitchText 0.3s infinite; }
+
+        /* 分隔線動畫 */
+        .cyber-separator { width: 0%; height: 1px; background: #fff; margin: 15px auto; opacity: 0.5; transition: width 1s ease-in-out; }
+        .yellow-theme .cyber-separator { background: #ffd700; }
+        .pink-theme .cyber-separator { background: #ff4d6d; }
+        .red-theme .cyber-separator { background: #ff003c; height: 2px; box-shadow: 0 0 10px #ff003c; }
+        .expand-line { width: 100% !important; }
+
+        .cyber-text { color: #ddd; font-size: 1.4rem; margin-bottom: 40px; line-height: 1.8; letter-spacing: 1px; min-height: 120px; }
+        .btn-row { display: flex; justify-content: center; align-items: center; gap: 40px; min-height: 100px; width: 100%; }
+
+        /* 動畫控制 */
+        .hidden-el { opacity: 0; transform: translateY(10px); transition: all 0.5s ease; visibility: hidden; }
+        .show-el { opacity: 1; transform: translateY(0); visibility: visible; }
+
+        .cyber-btn {
+            padding: 15px 40px; font-size: 1.4rem; font-weight: bold;
+            border-radius: 50px; cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: inherit; letter-spacing: 2px; position: relative;
+        }
+        .btn-ok { background: linear-gradient(135deg, rgba(0, 255, 0, 0.1), transparent); color: #0f0; border: 2px solid #0f0; box-shadow: 0 0 15px rgba(0, 255, 0, 0.3); }
+        .btn-ok:hover { background: #0f0; color: #000; box-shadow: 0 0 40px #0f0; transform: scale(1.05); }
+
+        .btn-cool { background: linear-gradient(135deg, rgba(0, 240, 255, 0.1), transparent); color: #00f0ff; border: 2px solid #00f0ff; box-shadow: 0 0 20px rgba(0, 240, 255, 0.3); z-index: 20; }
+        .btn-cool:hover { background: #00f0ff; color: #000; box-shadow: 0 0 40px #00f0ff; transform: scale(1.05); }
+
+        .btn-danger, .btn-normal { background: #222; color: #888; border: 2px solid #555; z-index: 100; }
+        .btn-danger { background: #ff003c; color: #fff; border: none; box-shadow: 0 0 15px #ff003c; }
+        .glitch-effect { background: #ff003c !important; color: #fff !important; border-color: #ff003c !important; box-shadow: 0 0 20px #ff003c !important; transition: none !important; animation: shake 0.2s infinite linear; z-index: 99999 !important; }
+        @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 100% { transform: translate(-1px, -2px) rotate(-1deg); } }
+        
+        #s3-warning { display: none; margin-top: 30px; color: #ff4d6d; font-size: 1.2rem; background: rgba(255, 0, 60, 0.15); padding: 15px; border-radius: 8px; border: 1px solid #ff4d6d; box-shadow: 0 0 15px rgba(255, 0, 60, 0.2); }
+        #s3-bsod { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0000aa; color: #fff; font-family: 'Consolas', monospace; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 50px; z-index: 9999; text-align: left; }
+        
+        /* 轉場覆蓋層 */
+        #scene-transition-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 10000; display: none; flex-direction: column; justify-content: center; align-items: center; opacity: 0; transition: opacity 2s ease; }
+        .loader-box { position: relative; width: 150px; height: 150px; display: flex; justify-content: center; align-items: center; }
+        .ring { position: absolute; border-radius: 50%; border: 3px solid transparent; }
+        .ring-1 { width: 100%; height: 100%; border-top: 4px solid #ff003c; border-left: 4px solid #ff003c; box-shadow: 0 0 20px #ff003c; animation: spinA 0.5s linear infinite; }
+        .ring-2 { width: 70%; height: 70%; border-right: 4px solid #fff; border-bottom: 4px solid #fff; box-shadow: 0 0 20px #fff; animation: spinB 0.8s linear infinite; }
+        .transition-text { margin-top: 40px; color: #ff003c; font-family: monospace; font-size: 1.5rem; letter-spacing: 3px; font-weight: bold; text-shadow: 2px 0 #fff; animation: pulseText 0.5s ease-in-out infinite alternate; }
+        @keyframes spinA { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } @keyframes spinB { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } } @keyframes pulseText { 0% { opacity: 0.7; letter-spacing: 3px; } 100% { opacity: 1; letter-spacing: 6px; } }
+        @keyframes glitchText { 0% { transform: translate(0); } 20% { transform: translate(-2px, 2px); } 40% { transform: translate(-2px, -2px); } 60% { transform: translate(2px, 2px); } 80% { transform: translate(2px, -2px); } 100% { transform: translate(0); } }
+    </style>
+</head>
+<body>
+     
+    <iframe id="game-frame" allow="autoplay; fullscreen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; border:none; z-index:20000; background:#000;"></iframe>
+
+    <div id="toast-msg"></div>
+
+    <div id="intro-overlay">
+        <div id="intro-step-1">
+            <div class="tap-hint">👆 點擊螢幕啟動
+</div>
+        </div>
+        <div id="intro-step-2">
+            <h1 id="intro-title" class="intro-title"></h1>
+            <ul id="intro-list" class="intro-list"></ul>
+            <p id="intro-note" class="intro-note"></p>
+            <button id="intro-btn" class="intro-btn hidden-el" onclick="startJourney()">我準備好了</button>
+        </div>
+    </div>
+
+    <div id="scene-transition-overlay">
+        <div class="loader-box">
+            <div class="ring ring-1"></div>
+            <div class="ring ring-2"></div>
+        </div>
+        <div class="transition-text">警告： 正在傳送中...</div>
+    </div>
+
+    <div id="fireworks-canvas"></div>
+    
+    <audio id="sfx-login"><source src="sfx_login.mp3" type="audio/mpeg"></audio>
+    <audio id="sfx-success"><source src="connect.mp3" type="audio/mpeg"></audio>
+    <audio id="sfx-fail"><source src="error1.mp3" type="audio/mpeg"></audio>
+    <audio id="sfx-typing" loop><source src="typing.mp3" type="audio/mpeg"></audio>
+    <audio id="sfx-reboot"><source src="reboot.mp3" type="audio/mpeg"></audio>
+    <audio id="bgm-login" loop><source src="bg_login.mp3" type="audio/mpeg"></audio>
+    <audio id="sfx-alarm" loop><source src="alarm.mp3" type="audio/mpeg"></audio>
+
+    <div id="scene-1" class="scene-container active">
+        <div class="s1_terminal" id="s1-terminal">
+            <div class="s1_text" id="s1-msg"></div>
+            <div id="s1-input-area">
+                <input type="password" id="s1-input" class="s1_input" placeholder="****">
+                <button class="s1_btn" onclick="s1_login()"> 訪問系統 </button>
+            </div>
+            <div id="s1-loading" class="s1_loading_container">
+                <div id="s1-loading-msg" style="color:#0f0;">登入成功...</div>
+                <div class="s1_loading_bar_bg"><div id="s1-bar-fill" class="s1_loading_bar_fill"></div></div>
+                <div class="s1_status">加載中: <span id="s1-percent">0</span>%</div>
+                <div id="s1-log" style="font-size: 0.7rem; color: #0f0; margin-top: 10px; text-align: left; opacity: 0.7;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="scene-2" class="scene-container">
+        <div class="cyber-card yellow-theme">
+            <h2 id="s2-title" class="cyber-title"></h2>
+            <div id="s2-line" class="cyber-separator"></div>
+            <p id="s2-text" class="cyber-text"></p>
+            <div id="s2-btn-row" class="btn-row hidden-el">
+                <button class="cyber-btn btn-ok" onclick="document.getElementById('sfx-success').play(); gotoScene(3)">操作大神</button>
+                <button id="s2-run-btn" class="cyber-btn btn-danger" onclick="s2_runAway()">路邊一條</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="scene-3" class="scene-container">
+        <div class="cyber-card pink-theme" id="s3-card">
+            <h2 id="s3-title" class="cyber-title"></h2>
+            <div id="s3-line" class="cyber-separator"></div>
+            <p id="s3-text" class="cyber-text"></p>
+            <div id="s3-btn-row" class="btn-row hidden-el">
+                <button class="cyber-btn btn-cool" onclick="s3_success()">超級帥</button>
+                <button id="s3-normal-btn" class="cyber-btn btn-normal" onclick="s3_crash()">普通</button>
+            </div>
+            <div id="s3-warning">⚠️ 偵測到視網膜異常風險，已過濾低美感選項。</div>
+        </div>
+    </div>
+
+    <div id="scene-4" class="scene-container">
+        <div class="cyber-card red-theme">
+            <h2 id="s4-title" class="cyber-title"></h2>
+            <div id="s4-line" class="cyber-separator"></div>
+            <p id="s4-text" class="cyber-text" style="color: #ffcccc; font-weight: bold;"></p>
+            <div id="s4-status" style="color: #ff003c; margin-top: 20px; font-family: monospace; font-size: 1.2rem;"></div>
+        </div>
+    </div>
+
+    <div id="s3-bsod">
+        <div style="font-size: 5rem; margin-bottom: 20px;">:(</div>
+        <div style="font-size: 1.5rem; width: 80%;">
+            您的電腦遇到問題，需要重新啟動。<br><br>
+            <span style="font-size: 1rem; opacity: 0.8;">100% 完成<br><br>錯誤代碼: <strong>CRITICAL_PROCESS_DIED: TRUTH_NOT_FOUND</strong><br><br>系統偵測到「普通」邏輯矛盾，請點擊下方按鈕重啟系統。</span>
+        </div>
+        <button class="s1_btn" style="width: 200px; margin-top: 50px;" onclick="s3_reboot()">重新啟動</button>
+    </div>
+
+    <script>
+        const CONFIG = { targetName: "楊雅羽", password: "0121" };
+        const fireworks = new Fireworks.default(document.querySelector('#fireworks-canvas'));
+        
+        const SCENE_DATA = {
+            s2: {
+                title: "⚠️ 邏輯推理",
+                body: "根據剛才網頁加載的速度<br>你認為開發者在遊戲中的操作水平是？<br><span style='font-size: 0.9rem; opacity: 0.7;'></span>"
+            },
+            s3: {
+                title: "⚠️ 審美驗證",
+                body: "在進入資料庫前，系統需要校準您的審美觀：<br><strong>「您覺得開發者的人如何？」</strong>"
+            },
+            s4: {
+                title: "⚠️ 空間警報",
+                body: "偵測到大量未知訊號...<br>座標鎖定：神秘會場周邊<br>警告：<strong>怪物軍團正在入侵！</strong><br><br><span style='color:#ff003c; font-size:1.6rem;'>任務：請立即前往消滅！</span>"
+            }
+        };
+
+        const introTitleText = "⚠️溫馨提醒";
+        const introListItems = ["  🎧 請全程佩戴耳機", "  🔕 請開啟勿擾模式", "  🔇 請關閉其他背景音樂", "  🛜 請確保當前網路良好","  🚫 請勿退出全螢幕模式", "  💖 準備好妳的心情"];
+        const introNoteText = "確認環境無誤後，請點擊下方按鈕";
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast-msg'); toast.innerText = msg;
+            if(isError) toast.classList.add('error'); else toast.classList.remove('error');
+            toast.classList.add('show'); setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        }
+
+        function requestFullScreen() {
+            var docElm = document.documentElement;
+            if (docElm.requestFullscreen) docElm.requestFullscreen();
+            else if (docElm.mozRequestFullScreen) docElm.mozRequestFullScreen();
+            else if (docElm.webkitRequestFullScreen) docElm.webkitRequestFullScreen();
+            else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
+        }
+
+        function gotoScene(n) {
+            const s2Btn = document.getElementById('s2-run-btn');
+            if(s2Btn) { if(n === 2) { const container = document.getElementById('s2-btn-row'); resetButtonState(s2Btn, container, '路邊一條'); } else { s2Btn.style.display = 'none'; } }
+            const s3Btn = document.getElementById('s3-normal-btn');
+            if(s3Btn) { if(n === 3) { const container = document.getElementById('s3-btn-row'); resetButtonState(s3Btn, container, '普通'); } else { s3Btn.style.display = 'none'; } }
+            
+            document.querySelectorAll('.scene-container').forEach(el => el.classList.remove('active'));
+            document.getElementById(`scene-${n}`).classList.add('active');
+
+            if (n === 2) playSceneAnimation('s2-title', 's2-line', 's2-text', 's2-btn-row', SCENE_DATA.s2);
+            else if (n === 3) playSceneAnimation('s3-title', 's3-line', 's3-text', 's3-btn-row', SCENE_DATA.s3);
+            else if (n === 4) runInvasionSequence(); 
+        }
+
+        async function playSceneAnimation(titleId, lineId, textId, btnRowId, data) {
+            const titleEl = document.getElementById(titleId);
+            const lineEl = document.getElementById(lineId);
+            const textEl = document.getElementById(textId);
+            const btnRow = btnRowId ? document.getElementById(btnRowId) : null;
+            
+            titleEl.innerHTML = ""; textEl.innerHTML = "";
+            lineEl.classList.remove('expand-line');
+            if(btnRow) { btnRow.classList.remove('show-el'); btnRow.classList.add('hidden-el'); }
+
+            await typeWriterPromise(titleId, data.title, 80);
+            setTimeout(async () => {
+                lineEl.classList.add('expand-line');
+                setTimeout(async () => {
+                    await typeWriterPromise(textId, data.body, 80);
+                    if(btnRow) {
+                        setTimeout(() => { btnRow.classList.remove('hidden-el'); btnRow.classList.add('show-el'); }, 300);
+                    }
+                }, 800);
+            }, 200);
+        }
+
+        async function runInvasionSequence() {
+            document.body.classList.add('red-alert-mode');
+            const bgm = document.getElementById('bgm-login');
+            
+            const fadeAudio = setInterval(() => {
+                if(bgm.volume > 0.05) bgm.volume -= 0.05;
+                else { bgm.pause(); clearInterval(fadeAudio); }
+            }, 100);
+
+            // ★★★ 播放獨立的警報音效 ★★★
+            const alarmMusic = document.getElementById('sfx-alarm');
+            if (alarmMusic) {
+                alarmMusic.volume = 0.5;
+                alarmMusic.currentTime = 0;
+                alarmMusic.play().catch(()=>{});
+            }
+
+            // 播放一次短促的錯誤音效
+            const errorSfx = document.getElementById('sfx-fail');
+            errorSfx.volume = 0.5;
+            errorSfx.currentTime = 0; errorSfx.play();
+            
+            await playSceneAnimation('s4-title', 's4-line', 's4-text', null, SCENE_DATA.s4);
+
+            setTimeout(async () => {
+                const statusEl = document.getElementById('s4-status');
+                const msgs = ["啟動曲速...", "目標已鎖定...", "3秒後傳送", "2秒後傳送", "1秒後傳送"];
+                
+                // ★★★ 修正：這裡不再使用 play() 循環，改為手動播放短音效 ★★★
+                const typingSfx = document.getElementById('sfx-typing');
+                
+                for(let msg of msgs) {
+                    statusEl.innerText = msg;
+                    
+                    // 播放 100ms 的短音效
+                    try {
+                        typingSfx.currentTime = 0;
+                        typingSfx.play();
+                        setTimeout(() => typingSfx.pause(), 100);
+                    } catch(e) {}
+
+                    await new Promise(r => setTimeout(r, 800)); 
+                }
+
+                launchGame();
+
+            }, 4000); 
+        }
+
+        function typeWriterHTML(elementId, htmlContent, speed, callback) {
+            const element = document.getElementById(elementId);
+            const audio = document.getElementById('sfx-typing');
+            if (!element) return;
+            element.innerHTML = "";
+            try { audio.currentTime = 0; audio.volume = 0.6; let playPromise = audio.play(); if (playPromise !== undefined) { playPromise.catch(error => {}); } } catch(e) {}
+            let i = 0;
+            function type() {
+                if (i < htmlContent.length) {
+                    let char = htmlContent.charAt(i);
+                    if (char === '<') {
+                        let tag = '';
+                        while (htmlContent.charAt(i) !== '>' && i < htmlContent.length) { tag += htmlContent.charAt(i); i++; }
+                        tag += '>'; i++; element.innerHTML += tag; type();
+                    } else {
+                        element.innerHTML += char; i++; setTimeout(type, speed);
+                    }
+                } else {
+                    // ★★★ 確保打字結束後音效停止 ★★★
+                    audio.pause(); audio.currentTime = 0; if (callback) callback();
+                }
+            }
+            type();
+        }
+
+        function typeWriterPromise(elementId, text, speed = 100) {
+            return new Promise(resolve => { typeWriterHTML(elementId, text, speed, resolve); });
+        }
+
+        function resetButtonState(btn, container, text) {
+            if (!btn || !container) return;
+            container.appendChild(btn); btn.style.position = 'relative'; btn.style.left = 'auto'; btn.style.top = 'auto'; btn.style.width = 'auto'; btn.style.display = 'inline-block'; btn.innerText = text; btn.classList.remove('glitch-effect'); 
+        }
+
+        let step1Clicked = false;
+        document.body.addEventListener('click', async function() {
+            if(!step1Clicked) {
+                step1Clicked = true; requestFullScreen(); 
+                document.getElementById('intro-step-1').style.display = 'none';
+                document.getElementById('intro-step-2').style.display = 'flex'; 
+                await typeWriterPromise('intro-title', introTitleText, 100);
+                const listContainer = document.getElementById('intro-list');
+                for (let i = 0; i < introListItems.length; i++) {
+                    let li = document.createElement('li'); li.id = 'intro-li-' + i; listContainer.appendChild(li);
+                    await typeWriterPromise(li.id, introListItems[i], 100);
+                    await new Promise(r => setTimeout(r, 400)); 
+                }
+                await typeWriterPromise('intro-note', introNoteText, 80);
+                const btn = document.getElementById('intro-btn');
+                btn.classList.remove('hidden-el'); btn.classList.add('show-el');
+            }
+        });
+
+        function startJourney() {
+            requestFullScreen(); 
+            const overlay = document.getElementById('intro-overlay'); overlay.style.opacity = 0;
+            const bgm = document.getElementById('bgm-login'); bgm.volume = 0.5; bgm.play().catch(()=>{});
+            setTimeout(() => { overlay.style.display = 'none'; s1_start_typewriter(); }, 1000);
+        }
+
+        function s1_start_typewriter() {
+            const msg = `> 系統偵測啟動...\n> 玩家 ID: ${CONFIG.targetName}\n> 發現數據流，正在解析...\n> 請求存取權限...`;
+            const el = document.getElementById('s1-msg');
+            const typingSfx = document.getElementById('sfx-typing');
+            typingSfx.pause(); typingSfx.currentTime = 0; typingSfx.volume = 0.6; typingSfx.play().catch(()=>{});
+            let i = 0;
+            function type() { if(i < msg.length) { el.innerHTML = msg.substring(0, i+1).replace(/\n/g, "<br>") + '<span class="cursor-blink"></span>'; i++; setTimeout(type, 70); } else { typingSfx.pause(); typingSfx.currentTime = 0; } }
+            type();
+        }
+
+        function s1_login() {
+            const inputVal = document.getElementById('s1-input').value;
+            if(inputVal === CONFIG.password) {
+                document.getElementById('sfx-success').play().catch(()=>{});
+                document.getElementById('s1-input-area').style.display = 'none';
+                document.getElementById('s1-loading').style.display = 'block';
+                s1_startLoading();
+            } else {
+                document.getElementById('sfx-fail').play().catch(()=>{});
+                showToast("⛔ 拒絕存取：密碼錯誤", true);
+                document.getElementById('s1-input').value = "";
+            }
+        }
+
+        function s1_startLoading() {
+            let percent = 0; const bar = document.getElementById('s1-bar-fill'); const percentText = document.getElementById('s1-percent'); const logText = document.getElementById('s1-log');
+            const logs = ["正在初始化核心模組...", "同步生日回憶數據...", "載入遊戲資源包...", "正在繞過安全防火牆...", "連線至專屬伺服器...", "環境建置完成..."];
+            const timer = setInterval(() => {
+                percent += Math.floor(Math.random() * 3) + 1;
+                if (percent >= 100) { percent = 100; clearInterval(timer); document.getElementById('s1-loading-msg').innerText = "準備進入遊戲..."; setTimeout(() => { gotoScene(2); }, 1000); }
+                bar.style.width = percent + "%"; percentText.innerText = percent; if (percent % 15 === 0) logText.innerText = "> " + logs[Math.floor(Math.random() * logs.length)];
+            }, 50);
+        }
+
+        function s2_runAway() {
+            document.getElementById('sfx-fail').play();
+            const btn = document.getElementById('s2-run-btn');
+            if(btn.parentNode !== document.body) { const rect = btn.getBoundingClientRect(); btn.style.left = rect.left + 'px'; btn.style.top = rect.top + 'px'; btn.style.width = rect.width + 'px'; document.body.appendChild(btn); btn.style.position = 'fixed'; }
+            const maxX = window.innerWidth - 150; const maxY = window.innerHeight - 80;
+            const randomX = Math.floor(Math.random() * maxX); const randomY = Math.floor(Math.random() * maxY);
+            btn.style.left = randomX + "px"; btn.style.top = randomY + "px";
+            btn.innerText = ["太慢了！", "抓不到~", "瞬移！", "累了嗎？", "嘿嘿~", "點不到"][Math.floor(Math.random() * 6)];
+            btn.classList.add('glitch-effect');
+        }
+
+        let s3_hardMode = false; const normalBtn = document.getElementById('s3-normal-btn');
+        normalBtn.addEventListener('mouseover', () => { if (!s3_hardMode) return; setTimeout(() => { moveButton(); }, 100); });
+
+        function s3_crash() { document.getElementById('sfx-fail').play(); document.getElementById('s3-bsod').style.display = 'flex'; }
+        function s3_reboot() {
+            document.getElementById('sfx-reboot').play();
+            document.getElementById('s3-bsod').style.display = 'none'; requestFullScreen(); showToast("✅ 系統重啟完成。強制校正模組已啟用。");
+            const container = document.getElementById('s3-btn-row'); resetButtonState(normalBtn, container, '普通(?!)');
+            s3_hardMode = true; document.getElementById('s3-warning').style.display = 'block';
+        }
+        function moveButton() {
+            if(normalBtn.parentNode !== document.body) { const rect = normalBtn.getBoundingClientRect(); normalBtn.style.width = rect.width + 'px'; document.body.appendChild(normalBtn); }
+            const maxX = window.innerWidth - 200; const maxY = window.innerHeight - 80;
+            const newX = Math.floor(Math.random() * maxX); const newY = Math.floor(Math.random() * maxY);
+            normalBtn.style.position = 'fixed'; normalBtn.style.left = newX + 'px'; normalBtn.style.top = newY + 'px';
+            normalBtn.classList.add('glitch-effect'); normalBtn.innerText = ["ERROR", "不可選", "NOPE", "404", "手速太慢", "太天真了"][Math.floor(Math.random() * 6)];
+            setTimeout(() => { normalBtn.classList.remove('glitch-effect'); }, 500);
+        }
+
+        function s3_success() {
+            document.getElementById('sfx-success').play();
+            showToast("✅ 審美驗證通過！系統校準完成。");
+            setTimeout(() => {
+                gotoScene(4);
+            }, 2000);
+        }
+
+        function launchGame() {
+            const overlay = document.getElementById('scene-transition-overlay');
+            if (overlay) { overlay.style.display = 'flex'; setTimeout(() => { overlay.style.opacity = 1; }, 50); }
+            
+            // 轉場時淡出警報聲
+            const alarm = document.getElementById('sfx-alarm');
+            if(alarm) {
+                const fadeAlarm = setInterval(() => {
+                if(alarm.volume > 0.05) alarm.volume -= 0.05;
+                else { alarm.pause(); clearInterval(fadeAlarm); }
+                }, 100);
+            }
+
+            console.log("轉場動畫開始...");
+            setTimeout(() => {
+                const frame = document.getElementById('game-frame');
+                frame.src = "index.html"; 
+                frame.style.display = "block";
+                frame.onload = function() { if(overlay) overlay.style.display = 'none'; };
+            }, 3000); 
+        }
+    </script>
+</body>
+</html>
